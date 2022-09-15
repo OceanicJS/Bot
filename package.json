@@ -1,10 +1,13 @@
 {
-  "name": "snipe-bot",
+  "name": "oceanic-bot",
   "version": "1.0.0",
   "description": "A bot made with Oceanic.",
   "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "down": "sudo docker-compose down --rmi 'all' --remove-orphans",
+    "up": "sudo docker-compose up --build -d",
+    "up:dev": "sudo docker-compose up --build",
+    "update": "git pull && npm run down && npm run up"
   },
   "repository": {
     "type": "git",
