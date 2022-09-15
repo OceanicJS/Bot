@@ -22,7 +22,7 @@ const client = new Client({
 	gateway: {
 		intents:  ["GUILDS", "GUILD_MESSAGES", "MESSAGE_CONTENT"],
 		presence: {
-			activities: [{ type: ActivityTypes.WATCHING, name: "https://oceanic.owo-whats-this.dev" } ],
+			activities: [{ type: ActivityTypes.WATCHING, name: "https://oceanic.ws" } ],
 			status:     "online"
 		}
 	}
@@ -84,7 +84,7 @@ client.once("ready", async() => {
 	}
 
 	setInterval(() => {
-		void client.editStatus("online", [{ type: ActivityTypes.WATCHING, name: "https://oceanic.owo-whats-this.dev" } ]);
+		void client.editStatus("online", [{ type: ActivityTypes.WATCHING, name: "https://oceanic.ws" } ]);
 	}, 6e4);
 	await checkGit();
 	setInterval(async() => {
