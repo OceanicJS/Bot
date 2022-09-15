@@ -1,0 +1,28 @@
+  
+version: "3"
+
+services:
+  oceanic-bot:
+    container_name: oceanic-bot
+    build: .
+    volumes:
+      - data:/data:z
+    restart: always
+    hostname: oceanic-bot.containers.local
+    networks:
+      default:
+        ipv4_address: 172.19.3.14
+
+networks:
+  default:
+    name: oceanic-bot
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.3.12/30
+          gateway: 172.19.3.13
+
+volumes:
+  modules: null
+  data: null

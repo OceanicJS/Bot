@@ -1,0 +1,10 @@
+{
+	"dataDir": "/data",
+	"token": "Bot https://discord.com/developers/applications",
+	"guild": "guild for commands",
+	"docsWebhook": {
+		"id": "webhook id for discord/discord-api-docs notifications",
+		"token": "webhook token for discord/discord-api-docs notifications"
+	},
+	"git": "https://github.com/settings/tokens"
+}

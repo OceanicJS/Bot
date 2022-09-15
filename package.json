@@ -1,0 +1,40 @@
+{
+  "name": "snipe-bot",
+  "version": "1.0.0",
+  "description": "A bot made with Oceanic.",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OceanicJS/Bot.git"
+  },
+  "keywords": [
+    "oceanic",
+    "oceanic.js",
+    "discord",
+    "bot",
+    "discord-bot"
+  ],
+  "author": "Donovan Daniels <hewwo@yiff.rocks>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OceanicJS/Bot/issues"
+  },
+  "homepage": "https://github.com/OceanicJS/Bot#readme",
+  "dependencies": {
+    "@octokit/rest": "^19.0.4",
+    "oceanic.js": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.18",
+    "@uwu-codes/eslint-config": "^1.0.55",
+    "@uwu-codes/tsconfig": "^1.0.1",
+    "ts-node": "^10.9.1",
+    "typedoc": "^0.23.14",
+    "typescript": "^4.8.3"
+  },
+  "type": "module",
+  "private": true
+}
