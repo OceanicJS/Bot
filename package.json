@@ -4,7 +4,8 @@
   "description": "A bot made with Oceanic.",
   "main": "index.ts",
   "scripts": {
-    "start": "node --no-warnings --no-deprecation --experimental-specifier-resolution=node --loader ts-node/esm index.ts",
+    "start": "node --no-warnings --no-deprecation --experimental-specifier-resolution=node build/index.js",
+    "build": "tsc",
     "down": "sudo docker-compose down --rmi 'all' --remove-orphans",
     "dev": "npm run down && sudo docker-compose up --build",
     "up": "sudo docker-compose up --build -d",
