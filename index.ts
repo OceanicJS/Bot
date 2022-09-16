@@ -77,10 +77,10 @@ client.once("ready", async() => {
 			defaultMemberPermissions: "8"
 		}
 	];
-	const cache = await exists(new URL("command-cache.json", config.dataDir)) ? (await readFile(new URL("command-cache.json", config.dataDir))).toString() : "[]";
+	const cache = await exists(`${config.dataDir}/command-cache.json`) ? await readFile(`${config.dataDir}/command-cache.json`, "utf-8") : "[]";
 	if (JSON.stringify(commands) !== cache) {
 		await client.application.bulkEditGuildCommands(config.guild, commands);
-		await writeFile(new URL("command-cache.json", config.dataDir), JSON.stringify(commands));
+		await writeFile(`${config.dataDir}/command-cache.json`, JSON.stringify(commands));
 	}
 
 	setInterval(() => {
@@ -103,18 +103,18 @@ interface Snipe {
 }
 
 async function getSnipe(channel: string, type: "delete" | "edit") {
-	const list = await exists(new URL("snipes.json", config.dataDir)) ? JSON.parse((await readFile(new URL("snipes.json", config.dataDir))).toString()) as Array<Snipe> : [];
+	const list = await exists(`${config.dataDir}/snipes.json`) ? JSON.parse(await readFile(`${config.dataDir}/snipes.json`, "utf-8")) as Array<Snipe> : [];
 	const snipe = list.sort((a,b) => b.timestamp - a.timestamp).find(sn => sn.channel === channel && sn.type === type);
 	if (!snipe) return null;
 	list.splice(list.indexOf(snipe), 1);
-	await writeFile(new URL("snipes.json", config.dataDir), JSON.stringify(list));
+	await writeFile(`${config.dataDir}/snipes.json`, JSON.stringify(list));
 	return snipe;
 }
 
 async function saveSnipe(author: User, channel: string, content: string, oldContent: string | null, type: "delete" | "edit") {
-	const list = await exists(new URL("snipes.json", config.dataDir)) ? JSON.parse((await readFile(new URL("snipes.json", config.dataDir))).toString()) as Array<Snipe> : [];
+	const list = await exists(`${config.dataDir}/snipes.json`) ? JSON.parse(await readFile(`${config.dataDir}/snipes.json`, "utf-8")) as Array<Snipe> : [];
 	const index = list.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content, oldContent, timestamp: Date.now(), type } as Snipe);
-	await writeFile(new URL("snipes.json", config.dataDir), JSON.stringify(list));
+	await writeFile(`${config.dataDir}/snipes.json`, JSON.stringify(list));
 	return list[index];
 }
 
@@ -124,8 +124,8 @@ async function checkGit() {
 		repo:     "discord-api-docs",
 		per_page: 100
 	});
-	const previous = await exists(new URL("latest-commit", config.dataDir)) ? (await readFile(new URL("latest-commit", config.dataDir))).toString() : null;
-	await writeFile(new URL("latest-commit", config.dataDir), commits.data[0].sha);
+	const previous = await exists(`${config.dataDir}/latest-commit`) ? (await readFile(`${config.dataDir}/latest-commit`)).toString() : null;
+	await writeFile(`${config.dataDir}/latest-commit`, commits.data[0].sha);
 	if (previous === null) {
 		console.log("No cached commit, not logging anything");
 		return;
