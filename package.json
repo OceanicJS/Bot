@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node --no-warnings --no-deprecation --experimental-specifier-resolution=node build/src/index.js",
     "build": "tsc",
-    "down": "sudo docker-compose down --rmi 'all' --remove-orphans",
+    "down": "sudo docker-compose down --rmi 'all' --remove-orphans --volumes",
     "dev": "npm run down && sudo docker-compose up --build",
     "up": "sudo docker-compose up --build -d",
     "update": "git pull && npm run down && npm run up"
