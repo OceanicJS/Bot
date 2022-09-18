@@ -150,7 +150,7 @@ async function checkGit() {
 	});
 
 	const num = cache.pulls.reduce((a, [id]) => a.concat(id), [] as Array<number>);
-	for (const pull of pulls) {
+	for (const pull of pulls.reverse()) {
 		let state: "open" | "closed" | undefined;
 		if (!num.includes(pull.number)) {
 			cache.pulls.push([pull.number, pull.state]);
