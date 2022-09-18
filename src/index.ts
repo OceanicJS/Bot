@@ -1,4 +1,5 @@
-import config from "./config.json" assert { type: "json" };
+import { filter, readCache, writeCache } from "./util";
+import config from "../config.json" assert { type: "json" };
 import type { CreateGuildApplicationCommandOptions, User } from "oceanic.js";
 import {
 	ActivityTypes,
@@ -11,12 +12,8 @@ import {
 	Client
 } from "oceanic.js";
 import { Octokit } from "@octokit/rest";
-import { access, readFile, writeFile } from "node:fs/promises";
-import type { PathLike } from "node:fs";
 
-function filter(str: string) { return str.replace(/\[/g, "\\[").replace(/\]/g, "\\]"); }
-
-const exists = (path: PathLike) => access(path).then(() => true).catch(() => false);
+const cache = await readCache();
 const client = new Client({
 	auth:    config.token,
 	gateway: {
@@ -77,10 +74,10 @@ client.once("ready", async() => {
 			defaultMemberPermissions: "8"
 		}
 	];
-	const cache = await exists(`${config.dataDir}/command-cache.json`) ? await readFile(`${config.dataDir}/command-cache.json`, "utf-8") : "[]";
-	if (JSON.stringify(commands) !== cache) {
+	if (JSON.stringify(commands) !== JSON.stringify(cache.commands)) {
 		await client.application.bulkEditGuildCommands(config.guild, commands);
-		await writeFile(`${config.dataDir}/command-cache.json`, JSON.stringify(commands));
+		cache.commands = commands;
+		await writeCache(cache);
 	}
 
 	setInterval(() => {
@@ -93,29 +90,18 @@ client.once("ready", async() => {
 	}, 1e3);
 });
 
-interface Snipe {
-	author: Record<"id" | "tag" | "avatarURL", string>;
-	channel: string;
-	content: string;
-	oldContent: string | null;
-	timestamp: number;
-	type: "delete" | "edit";
-}
-
 async function getSnipe(channel: string, type: "delete" | "edit") {
-	const list = await exists(`${config.dataDir}/snipes.json`) ? JSON.parse(await readFile(`${config.dataDir}/snipes.json`, "utf-8")) as Array<Snipe> : [];
-	const snipe = list.sort((a,b) => b.timestamp - a.timestamp).find(sn => sn.channel === channel && sn.type === type);
+	const snipe = cache.snipes.sort((a,b) => b.timestamp - a.timestamp).find(sn => sn.channel === channel && sn.type === type);
 	if (!snipe) return null;
-	list.splice(list.indexOf(snipe), 1);
-	await writeFile(`${config.dataDir}/snipes.json`, JSON.stringify(list));
+	cache.snipes.splice(cache.snipes.indexOf(snipe), 1);
+	await writeCache(cache);
 	return snipe;
 }
 
 async function saveSnipe(author: User, channel: string, content: string, oldContent: string | null, type: "delete" | "edit") {
-	const list = await exists(`${config.dataDir}/snipes.json`) ? JSON.parse(await readFile(`${config.dataDir}/snipes.json`, "utf-8")) as Array<Snipe> : [];
-	const index = list.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content, oldContent, timestamp: Date.now(), type } as Snipe);
-	await writeFile(`${config.dataDir}/snipes.json`, JSON.stringify(list));
-	return list[index];
+	const index = cache.snipes.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content, oldContent, timestamp: Date.now(), type });
+	await writeCache(cache);
+	return cache.snipes[index];
 }
 
 async function checkGit() {
@@ -124,13 +110,13 @@ async function checkGit() {
 		repo:     "discord-api-docs",
 		per_page: 100
 	});
-	const previous = await exists(`${config.dataDir}/latest-commit`) ? (await readFile(`${config.dataDir}/latest-commit`)).toString() : null;
-	await writeFile(`${config.dataDir}/latest-commit`, commits.data[0].sha);
+	const previous = cache.commit;
+	cache.commit = commits.data[0].sha;
+	await writeCache(cache);
 	if (previous === null) {
 		console.log("No cached commit, not logging anything");
-		return;
 	} else {
-		const prevIndex = commits.data.findIndex(commit => commit.sha === previous.replace(/(\r?\n?)+/g, ""));
+		const prevIndex = commits.data.findIndex(commit => commit.sha === previous);
 		const newCommits = commits.data.slice(0, prevIndex === -1 ? 100 : prevIndex);
 		if (newCommits.length === 0) return;
 		const commitMessage = (str: string) => ((str = str.split("\n")[0], str.length > 50 ? `${str.slice(0, 47)}...` : str));
@@ -154,6 +140,68 @@ async function checkGit() {
 				}
 			]
 		});
+	}
+
+	const { data: pulls } = await octo.pulls.list({
+		owner:    "discord",
+		repo:     "discord-api-docs",
+		per_page: 100,
+		state:    "all"
+	});
+
+	const num = cache.pulls.reduce((a, [id]) => a.concat(id), [] as Array<number>);
+	for (const pull of pulls) {
+		let state: "open" | "closed" | undefined;
+		if (!num.includes(pull.number)) {
+			cache.pulls.push([pull.number, pull.state]);
+			console.log("New PR:", pull.number, pull.state);
+			state = "open";
+		} else {
+			const oldState = cache.pulls.find(([id]) => id === pull.number)![1];
+			if (pull.state !== oldState) {
+				console.log("PR state changed:", pull.id, oldState, pull.state);
+				cache.pulls.find(([id]) => id === pull.number)![1] = pull.state;
+				state = pull.state as "open" | "closed";
+			}
+		}
+
+		if (state) {
+			switch (state) {
+				case "open": {
+					await client.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
+						embeds: [
+							{
+								color:  38912,
+								title:  `[discord/discord-api-docs] Pull request opened: #${pull.number} ${pull.title}`,
+								author: {
+									name:    pull.user?.name || pull.user?.login || "Discord",
+									iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
+								},
+								description: pull.body || "",
+								url:         pull.html_url
+							}
+						]
+					});
+					break;
+				}
+
+				case "closed": {
+					await client.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
+						embeds: [
+							{
+								title:  `[discord/discord-api-docs] Pull request closed: #${pull.number} ${pull.title}`,
+								author: {
+									name:    pull.user?.name || pull.user?.login || "Discord",
+									iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
+								},
+								url: pull.html_url
+							}
+						]
+					});
+					break;
+				}
+			}
+		}
 	}
 }
 

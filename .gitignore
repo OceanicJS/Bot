@@ -1,5 +1,4 @@
 node_modules/
-snipes.json
 config.json
-command-cache.json
-latest-commit
+test.ts
+data/
