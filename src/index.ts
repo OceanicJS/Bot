@@ -155,7 +155,7 @@ async function checkGit() {
 		if (!num.includes(pull.number)) {
 			cache.pulls.push([pull.number, pull.state]);
 			console.log("New PR:", pull.number, pull.state);
-			state = "open";
+			state = pull.state as "open" | "closed";
 		} else {
 			const oldState = cache.pulls.find(([id]) => id === pull.number)![1];
 			if (pull.state !== oldState) {
@@ -172,12 +172,12 @@ async function checkGit() {
 						embeds: [
 							{
 								color:  38912,
-								title:  `[discord/discord-api-docs] Pull request opened: #${pull.number} ${pull.title}`,
+								title:  `[discord/discord-api-docs] Pull request opened: #${pull.number} ${pull.title.slice(0,200)}${pull.title.length > 200 ? "(...)" : ""}`,
 								author: {
 									name:    pull.user?.name || pull.user?.login || "Discord",
 									iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
 								},
-								description: pull.body || "",
+								description: `${pull.body?.slice(0, 4090) || ""}${pull.body && pull.body.length > 4090 ? "(...)" : ""}`,
 								url:         pull.html_url
 							}
 						]
@@ -189,7 +189,7 @@ async function checkGit() {
 					await client.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
 						embeds: [
 							{
-								title:  `[discord/discord-api-docs] Pull request closed: #${pull.number} ${pull.title}`,
+								title:  `[discord/discord-api-docs] Pull request closed: #${pull.number} ${pull.title.slice(0,200)}${pull.title.length > 200 ? "(...)" : ""}`,
 								author: {
 									name:    pull.user?.name || pull.user?.login || "Discord",
 									iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
