@@ -1,4 +1,10 @@
-import { filter, readCache, writeCache } from "./util";
+import {
+	filter,
+	readCache,
+	truncate,
+	truncateWords,
+	writeCache
+} from "./util";
 import config from "../config.json" assert { type: "json" };
 import type { CreateGuildApplicationCommandOptions, User } from "oceanic.js";
 import {
@@ -119,10 +125,9 @@ async function checkGit() {
 		const prevIndex = commits.data.findIndex(commit => commit.sha === previous);
 		const newCommits = commits.data.slice(0, prevIndex === -1 ? 100 : prevIndex);
 		if (newCommits.length === 0) return;
-		const commitMessage = (str: string) => ((str = str.split("\n")[0], str.length > 50 ? `${str.slice(0, 47)}...` : str));
 		let log = "";
 		for (const commit of newCommits) {
-			const newLog = `[\`${commit.sha.slice(0, 7)}\`](${commit.html_url}) ${commitMessage(commit.commit.message)}${commit.author ? ` - ${commit.author.name || commit.author.login}` : ""}\n`;
+			const newLog = `[\`${commit.sha.slice(0, 7)}\`](${commit.html_url}) ${truncate(commit.commit.message.split("\n")[0], 50)}${commit.author ? ` - ${commit.author.name || commit.author.login}` : ""}\n`;
 			if (log.length + newLog.length >= 4096) break;
 			log += newLog;
 		}
@@ -172,12 +177,12 @@ async function checkGit() {
 						embeds: [
 							{
 								color:  38912,
-								title:  `[discord/discord-api-docs] Pull request opened: #${pull.number} ${pull.title.slice(0,200)}${pull.title.length > 200 ? "(...)" : ""}`,
+								title:  `[discord/discord-api-docs] Pull request opened: #${pull.number} ${truncateWords(pull.title, 256)}`,
 								author: {
 									name:    pull.user?.name || pull.user?.login || "Discord",
 									iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
 								},
-								description: `${pull.body?.slice(0, 4090) || ""}${pull.body && pull.body.length > 4090 ? "(...)" : ""}`,
+								description: truncateWords(pull.body || "", 4096),
 								url:         pull.html_url
 							}
 						]
@@ -189,7 +194,7 @@ async function checkGit() {
 					await client.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
 						embeds: [
 							{
-								title:  `[discord/discord-api-docs] Pull request closed: #${pull.number} ${pull.title.slice(0,200)}${pull.title.length > 200 ? "(...)" : ""}`,
+								title:  `[discord/discord-api-docs] Pull request closed: #${pull.number} ${truncateWords(pull.title, 256)}`,
 								author: {
 									name:    pull.user?.name || pull.user?.login || "Discord",
 									iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
@@ -201,6 +206,7 @@ async function checkGit() {
 					break;
 				}
 			}
+			await writeCache(cache);
 		}
 	}
 }

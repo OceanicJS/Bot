@@ -21,6 +21,18 @@ interface Snipe {
 
 export const filter = (str: string) => str.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
 export const exists = (path: PathLike) => access(path).then(() => true, () => false);
+export const truncateWords = (str: string, maxLen: number) => {
+	let result = "";
+	for (const part of str.split(" ")) {
+		if (result.length + part.length + 3 > maxLen) break;
+		result += `${part} `;
+	}
+	return str.length === result.length ? str : `${result}...`;
+};
+export const truncate = (str: string, maxLen: number) => {
+	if (str.length <= maxLen) return str;
+	return `${str.slice(0, maxLen - 3)}...`;
+};
 export async function readCache() {
 	return (await exists(`${config.dataDir}/cache.json`)) ? JSON.parse(await readFile(`${config.dataDir}/cache.json`, "utf-8")) as Cache : { commands: [], commit: null, pulls: [], snipes: [] };
 }
