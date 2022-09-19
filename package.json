@@ -30,14 +30,13 @@
   "homepage": "https://github.com/OceanicJS/Bot#readme",
   "dependencies": {
     "@octokit/rest": "^19.0.4",
-    "oceanic.js": "^1.0.2"
+    "oceanic.js": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^18.7.18",
     "@uwu-codes/eslint-config": "^1.0.55",
     "@uwu-codes/tsconfig": "^1.0.1",
     "ts-node": "^10.9.1",
-    "typedoc": "^0.23.14",
     "typescript": "^4.8.3"
   },
   "type": "module",
