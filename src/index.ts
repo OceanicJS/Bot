@@ -7,6 +7,7 @@ import {
 } from "./util";
 import config from "../config.json" assert { type: "json" };
 import type { CreateGuildApplicationCommandOptions, User } from "oceanic.js";
+import { DiscordHTTPError } from "oceanic.js";
 import {
 	ActivityTypes,
 	MessageFlags,
@@ -78,6 +79,12 @@ client.once("ready", async() => {
 				}
 			],
 			defaultMemberPermissions: "8"
+		},
+		{
+			type:                     ApplicationCommandTypes.CHAT_INPUT,
+			name:                     "check-git",
+			description:              "Check Discord's github for updates.",
+			defaultMemberPermissions: "8"
 		}
 	];
 	if (JSON.stringify(commands) !== JSON.stringify(cache.commands)) {
@@ -124,27 +131,28 @@ async function checkGit() {
 	} else {
 		const prevIndex = commits.data.findIndex(commit => commit.sha === previous);
 		const newCommits = commits.data.slice(0, prevIndex === -1 ? 100 : prevIndex);
-		if (newCommits.length === 0) return;
-		let log = "";
-		for (const commit of newCommits) {
-			const newLog = `[\`${commit.sha.slice(0, 7)}\`](${commit.html_url}) ${truncate(commit.commit.message.split("\n")[0], 50)}${commit.author ? ` - ${commit.author.name || commit.author.login}` : ""}\n`;
-			if (log.length + newLog.length >= 4096) break;
-			log += newLog;
+		if (newCommits.length > 0) {
+			let log = "";
+			for (const commit of newCommits) {
+				const newLog = `[\`${commit.sha.slice(0, 7)}\`](${commit.html_url}) ${truncate(commit.commit.message.split("\n")[0], 50)}${commit.author ? ` - ${commit.author.name || commit.author.login}` : ""}\n`;
+				if (log.length + newLog.length >= 4096) break;
+				log += newLog;
+			}
+			await client.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
+				embeds: [
+					{
+						color:  7506394,
+						title:  `[discord-api-docs:main] ${newCommits.length} new commit${newCommits.length === 1 ? "" : "s"}`,
+						author: {
+							name:    "Discord",
+							iconURL: "https://avatars.githubusercontent.com/u/1965106?v=4"
+						},
+						description: log || "No Log",
+						url:         commits.data[0].html_url
+					}
+				]
+			});
 		}
-		await client.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
-			embeds: [
-				{
-					color:  7506394,
-					title:  `[discord-api-docs:main] ${newCommits.length} new commit${newCommits.length === 1 ? "" : "s"}`,
-					author: {
-						name:    "Discord",
-						iconURL: "https://avatars.githubusercontent.com/u/1965106?v=4"
-					},
-					description: log || "No Log",
-					url:         commits.data[0].html_url
-				}
-			]
-		});
 	}
 
 	const { data: pulls } = await octo.pulls.list({
@@ -155,10 +163,11 @@ async function checkGit() {
 	});
 
 	const num = cache.pulls.reduce((a, [id]) => a.concat(id), [] as Array<number>);
+	const temp: Array<[number, string]> = [];
 	for (const pull of pulls.reverse()) {
 		let state: "open" | "closed" | undefined;
 		if (!num.includes(pull.number)) {
-			cache.pulls.push([pull.number, pull.state]);
+			temp.push([pull.number, pull.state]);
 			console.log("New PR:", pull.number, pull.state);
 			state = pull.state as "open" | "closed";
 		} else {
@@ -167,48 +176,55 @@ async function checkGit() {
 				console.log("PR state changed:", pull.id, oldState, pull.state);
 				cache.pulls.find(([id]) => id === pull.number)![1] = pull.state;
 				state = pull.state as "open" | "closed";
-			}
+			} else continue;
 		}
 
-		if (state) {
-			switch (state) {
-				case "open": {
-					await client.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
-						embeds: [
-							{
-								color:  38912,
-								title:  `[discord/discord-api-docs] Pull request opened: #${pull.number} ${truncateWords(pull.title, 256)}`,
-								author: {
-									name:    pull.user?.name || pull.user?.login || "Discord",
-									iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
-								},
-								description: truncateWords(pull.body || "", 4096),
-								url:         pull.html_url
-							}
-						]
-					});
-					break;
-				}
+		if (state && num.length !== 0) {
+			try {
+				switch (state) {
+					case "open": {
+						await client.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
+							embeds: [
+								{
+									color:  38912,
+									title:  `[discord/discord-api-docs] Pull request opened: #${pull.number} ${truncateWords(pull.title, 256)}`,
+									author: {
+										name:    pull.user?.name || pull.user?.login || "Discord",
+										iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
+									},
+									description: truncateWords(pull.body || "", 4096),
+									url:         pull.html_url
+								}
+							]
+						});
+						break;
+					}
 
-				case "closed": {
-					await client.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
-						embeds: [
-							{
-								title:  `[discord/discord-api-docs] Pull request closed: #${pull.number} ${truncateWords(pull.title, 256)}`,
-								author: {
-									name:    pull.user?.name || pull.user?.login || "Discord",
-									iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
-								},
-								url: pull.html_url
-							}
-						]
-					});
-					break;
+					case "closed": {
+						await client.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
+							embeds: [
+								{
+									title:  `[discord/discord-api-docs] Pull request closed: #${pull.number} ${truncateWords(pull.title, 256)}`,
+									author: {
+										name:    pull.user?.name || pull.user?.login || "Discord",
+										iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
+									},
+									url: pull.html_url
+								}
+							]
+						});
+						break;
+					}
 				}
+			} catch (err) {
+				if (err instanceof DiscordHTTPError) {
+					console.log("Error sending webhook:", err.message, err.resBody);
+				} else console.error(err);
 			}
-			await writeCache(cache);
 		}
 	}
+	cache.pulls = [...temp.reverse(), ...cache.pulls];
+	await writeCache(cache);
 }
 
 client.on("messageDelete", async(message) => {
@@ -301,6 +317,16 @@ client.on("interactionCreate", async(interacton) => {
 							}
 						]
 					});
+				}
+				break;
+			}
+
+			case "check-git": {
+				if (interacton.user.id !== "242843345402069002") return interacton.createMessage({ content: "Sike" });
+				else {
+					await interacton.defer(MessageFlags.EPHEMERAL);
+					await checkGit();
+					await interacton.createFollowup({ content: "Done" });
 				}
 				break;
 			}

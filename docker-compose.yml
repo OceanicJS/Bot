@@ -6,8 +6,7 @@ services:
     container_name: oceanic-bot
     build: .
     volumes:
-      - data:/data:z
-      - build:/app/build
+      - ./data:/data:z
     restart: always
     hostname: oceanic-bot.containers.local
     networks:
@@ -23,8 +22,3 @@ networks:
       config:
         - subnet: 172.19.3.12/30
           gateway: 172.19.3.13
-
-volumes:
-  build: null
-  data: null
-  modules: null
