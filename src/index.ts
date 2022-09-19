@@ -7,8 +7,8 @@ import {
 } from "./util";
 import config from "../config.json" assert { type: "json" };
 import type { CreateGuildApplicationCommandOptions, User } from "oceanic.js";
-import { DiscordHTTPError } from "oceanic.js";
 import {
+	DiscordHTTPError,
 	ActivityTypes,
 	MessageFlags,
 	ApplicationCommandOptionTypes,
