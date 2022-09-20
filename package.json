@@ -30,7 +30,7 @@
   "homepage": "https://github.com/OceanicJS/Bot#readme",
   "dependencies": {
     "@octokit/rest": "^19.0.4",
-    "oceanic.js": "^1.1.0"
+    "oceanic.js": "^1.1.1-dev.cbe1544"
   },
   "devDependencies": {
     "@types/node": "^18.7.18",

@@ -22,12 +22,13 @@ interface Snipe {
 export const filter = (str: string) => str.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
 export const exists = (path: PathLike) => access(path).then(() => true, () => false);
 export const truncateWords = (str: string, maxLen: number) => {
+	if (str.length <= maxLen) return str;
 	let result = "";
 	for (const part of str.split(" ")) {
 		if (result.length + part.length + 3 > maxLen) break;
 		result += `${part} `;
 	}
-	return str.length === result.length ? str : `${result}...`;
+	return `${result}...`;
 };
 export const truncate = (str: string, maxLen: number) => {
 	if (str.length <= maxLen) return str;
