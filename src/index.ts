@@ -318,7 +318,6 @@ client.on("interactionCreate", async(interacton) => {
 						]
 					});
 				}
-				break;
 			}
 
 			case "check-git": {
