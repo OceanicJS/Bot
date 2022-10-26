@@ -188,29 +188,29 @@ export async function linkType(version: string, text: string) {
     for (const match of classMatches) {
         const clazz = root.classes.find(c => c.name === match);
         if (clazz) {
-            text = text.replace(new RegExp(`\\b(${match})\\b`), `[${match}](${docsURL(version, "class", clazz.module, clazz.name)})`);
+            text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "class", clazz.module, clazz.name)})`);
         }
     }
     for (const match of enumMatches) {
         const enm = root.enums.find(c => c.name === match);
         if (enm) {
-            text = text.replace(new RegExp(`\\b(${match})\\b`), `[${match}](${docsURL(version, "enum", enm.module, enm.name)})`);
+            text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "enum", enm.module, enm.name)})`);
         }
     }
     for (const match of interfaceMatches) {
         const iface = root.interfaces.find(c => c.name === match);
         if (iface) {
-            text = text.replace(new RegExp(`\\b(${match})\\b`), `[${match}](${docsURL(version, "interface", iface.module, iface.name)})`);
+            text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "interface", iface.module, iface.name)})`);
         }
     }
     for (const match of typeAliasMatches) {
         const typeAlias = root.typeAliases.find(c => c.name === match);
         if (typeAlias) {
-            text = text.replace(new RegExp(`\\b(${match})\\b`), `[${match}](${docsURL(version, "typeAlias", typeAlias.module, typeAlias.name)})`);
+            text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "typeAlias", typeAlias.module, typeAlias.name)})`);
         }
     }
     for (const match of intrinsicMatches) {
-        text = text.replace(new RegExp(`\\b(${match})\\b`), intrinsic[match as keyof typeof intrinsic]);
+        text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), intrinsic[match as keyof typeof intrinsic]);
     }
 
     return text;
