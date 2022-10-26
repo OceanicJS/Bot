@@ -236,6 +236,10 @@ export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "cl
 }
 
 export async function handleAutocomplete(this: Client, interaction: AutocompleteInteraction, version: string) {
+    const check = await checkVersion(version);
+    if (!check) {
+        return handleIssue("loading", interaction, version, true, null, null);
+    }
     const [type] = interaction.data.options.getSubCommand<["class" | "event" | "property" | "method" | "interface" | "type"]>(true);
     const name = interaction.data.options.getString("class") || interaction.data.options.getString("interface");
     const majorType = interaction.data.options.getStringOption("class") ? "class" as const : (interaction.data.options.getStringOption("interface") ? "interface" as const : undefined as never);
