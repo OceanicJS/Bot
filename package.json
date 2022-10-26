@@ -30,10 +30,18 @@
   "homepage": "https://github.com/OceanicJS/Bot#readme",
   "dependencies": {
     "@octokit/rest": "^19.0.5",
-    "oceanic.js": "^1.2.1"
+    "fuzzy-search": "^3.2.1",
+    "oceanic.js": "^1.2.2-dev.7e6b60c",
+    "semver": "^7.3.8",
+    "typedoc": "^0.23.18",
+    "typedoc-json-parser": "^6.0.2"
   },
   "devDependencies": {
+    "@swc/core": "^1.3.10",
+    "@swc/helpers": "^0.4.12",
+    "@types/fuzzy-search": "^2.1.2",
     "@types/node": "^18.11.5",
+    "@types/semver": "^7.3.12",
     "@uwu-codes/eslint-config": "^1.1.3",
     "@uwu-codes/tsconfig": "^1.0.2",
     "ts-node": "^10.9.1",
