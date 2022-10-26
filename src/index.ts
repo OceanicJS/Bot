@@ -160,7 +160,7 @@ client.once("ready", async() => {
                         {
                             type:        ApplicationCommandOptionTypes.SUB_COMMAND,
                             name:        "interface",
-                            description: "Get documentation for a interface property.",
+                            description: "Get documentation for an interface property.",
                             options:     [
                                 {
                                     type:         ApplicationCommandOptionTypes.STRING,
@@ -307,7 +307,7 @@ client.once("ready", async() => {
                         {
                             type:        ApplicationCommandOptionTypes.SUB_COMMAND,
                             name:        "interface",
-                            description: "Get documentation for a interface property.",
+                            description: "Get documentation for an interface property.",
                             options:     [
                                 {
                                     type:         ApplicationCommandOptionTypes.STRING,
