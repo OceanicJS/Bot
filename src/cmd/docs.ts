@@ -429,8 +429,12 @@ async function classRunner(this: Client, interaction: CommandInteraction, classN
             text += (text === "" ? "" : "\n") + param;
         }
         fields.push({
-            name:   "Constructor",
-            value:  (await Promise.all(clazz.constructor.parameters.map(async p => `\`${p.text.includes("null") ? "?" : ""}${p.name}${p.optional ? "?" : ""}\` - ${await linkType(version, p.text)}\n${p.comment || ""}`))).join("\n"),
+            name:  "Constructor",
+            value: [
+                `\`new ${className}(${clazz.constructor.parameters.map(p => p.name).join(", ")})\``,
+                "",
+                ...(await Promise.all(clazz.constructor.parameters.map(async p => `\`${p.text.includes("null") ? "?" : ""}${p.name}${p.optional ? "?" : ""}\` - ${await linkType(version, p.text)}\n${p.comment || ""}`)))
+            ].join("\n"),
             inline: false
         });
     }
