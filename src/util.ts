@@ -10,6 +10,7 @@ import { access, readFile, writeFile } from "node:fs/promises";
 import { execSync } from "node:child_process";
 
 export interface Cache {
+    commandIDs: Record<string, string>;
     commands: Array<CreateGuildApplicationCommandOptions>;
     commit: string | null;
     pulls: Array<[id: number, state: string]>;
@@ -47,7 +48,7 @@ export const truncate = (str: string, maxLen: number) => {
     return `${str.slice(0, maxLen - 3)}...`;
 };
 export async function readCache() {
-    return (await exists(`${config.dataDir}/cache.json`)) ? JSON.parse(await readFile(`${config.dataDir}/cache.json`, "utf8")) as Cache : { commands: [], commit: null, pulls: [], snipes: [] };
+    return (await exists(`${config.dataDir}/cache.json`)) ? JSON.parse(await readFile(`${config.dataDir}/cache.json`, "utf8")) as Cache : { commands: [], commandIDs: {}, commit: null, pulls: [], snipes: [] };
 }
 export async function writeCache(cache: Cache) {
     await writeFile(`${config.dataDir}/cache.json`, JSON.stringify(cache, null, 2));

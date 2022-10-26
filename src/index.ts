@@ -29,7 +29,7 @@ const cache = await readCache();
 const client = new Client({
     auth:    config.token,
     gateway: {
-        intents:  ["GUILDS", "GUILD_MESSAGES", "MESSAGE_CONTENT"],
+        intents:  ["GUILDS", "GUILD_MESSAGES", "MESSAGE_CONTENT", "GUILD_MEMBERS"],
         presence: {
             activities: [{ type: ActivityTypes.WATCHING, name: "https://oceanic.ws" } ],
             status:     "online"
@@ -384,11 +384,17 @@ client.once("ready", async() => {
                     ]
                 }
             ]
+        },
+        {
+            type:        ApplicationCommandTypes.CHAT_INPUT,
+            name:        "commands",
+            description: "List my usable commands."
         }
     ];
     if (JSON.stringify(commands) !== JSON.stringify(cache.commands)) {
-        await client.application.bulkEditGuildCommands(config.guild, commands);
+        const ids = Object.fromEntries((await client.application.bulkEditGuildCommands(config.guild, commands)).map(b => [b.name, b.id]));
         cache.commands = commands;
+        cache.commandIDs = ids;
         await writeCache(cache);
     }
 
@@ -547,6 +553,26 @@ client.on("messageUpdate", async(message, oldMessage) => {
     await saveSnipe(message.author, message.channelID, message.content, oldMessage?.content || null, "edit");
 });
 
+client.on("guildMemberAdd", async member => {
+    if (member.guild.id === "1005489770278953112") {
+        await client.rest.channels.createMessage("1005489770849382442", {
+            embeds: [
+                {
+                    title:       "Welcome",
+                    description: [
+                        `Welcome to Oceanic ${member.mention}.`,
+                        //                 rules                   faq                      community-resources               updates
+                        "Make sure to read <#1005495702706716834>, <#1005497609198252064> & <#1020781903634256023> and follow <#1005493296887500880> in your server for instant updates.",
+                        "",//                                                                      amogus
+                        `For documentation, you can visit https://docs.oceanic.ws, or via commands <#1005493250641121392>. To see these commands, use </commands:${cache.commandIDs.commands}>`
+                    ].join("\n"),
+                    color: 0x2A5099
+                }
+            ]
+        });
+    }
+});
+
 client.on("interactionCreate", async interaction => {
     if (interaction.type === InteractionTypes.APPLICATION_COMMAND) {
         console.log(`[${new Date().toISOString()}][command/${interaction.data.name}]: ${interaction.user.tag} (${interaction.user.id})`);
@@ -655,6 +681,35 @@ client.on("interactionCreate", async interaction => {
 
             case "vdocs": {
                 return handleVersionedDocsCommand.call(client, interaction);
+            }
+
+            case "commands": {
+                return interaction.createMessage({
+                    embeds: [
+                        {
+                            title:       "Commands",
+                            description: [
+                                "-- Documentation --",
+                                "Latest Version:",
+                                `</docs class:${cache.commandIDs.docs}>`,
+                                `</docs method:${cache.commandIDs.docs}>`,
+                                `</docs event:${cache.commandIDs.docs}>`,
+                                `</docs type:${cache.commandIDs.docs}>`,
+                                `</docs property class:${cache.commandIDs.docs}>`,
+                                `</docs property interface:${cache.commandIDs.docs}>`,
+                                "Version Specific:",
+                                `</vdocs class:${cache.commandIDs.vdocs}>`,
+                                `</vdocs method:${cache.commandIDs.vdocs}>`,
+                                `</vdocs event:${cache.commandIDs.vdocs}>`,
+                                `</vdocs type:${cache.commandIDs.vdocs}>`,
+                                `</vdocs property class:${cache.commandIDs.vdocs}>`,
+                                `</vdocs property interface:${cache.commandIDs.vdocs}>`
+                            ].join("\n"),
+                            color: 0x2A5099
+                        }
+                    ],
+                    flags: MessageFlags.EPHEMERAL
+                });
             }
         }
     }
