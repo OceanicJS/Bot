@@ -564,7 +564,7 @@ client.on("guildMemberAdd", async member => {
                         //                 rules                   faq                      community-resources               updates
                         "Make sure to read <#1005495702706716834>, <#1005497609198252064> & <#1020781903634256023> and follow <#1005493296887500880> in your server for instant updates.",
                         "",//                                                                      amogus
-                        `For documentation, you can visit https://docs.oceanic.ws, or via commands <#1005493250641121392>. To see these commands, use </commands:${cache.commandIDs.commands}>`
+                        `For documentation, you can visit https://docs.oceanic.ws, or via commands in <#1005493250641121392>. To see these commands, use </commands:${cache.commandIDs.commands}>`
                     ].join("\n"),
                     color: 0x2A5099
                 }
