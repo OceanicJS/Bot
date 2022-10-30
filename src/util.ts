@@ -214,7 +214,7 @@ export async function linkType(version: string, text: string) {
         text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), intrinsic[match as keyof typeof intrinsic]);
     }
 
-    return text;
+    return text.replace(/(<|>)/g, "\\$1");
 }
 
 
