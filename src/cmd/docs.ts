@@ -419,6 +419,14 @@ async function classRunner(this: Client, interaction: CommandInteraction, classN
         });
     }
 
+    if (clazz.typeParameters.length !== 0) {
+        fields.push({
+            name:   "Type Parameters",
+            value:  (await Promise.all(clazz.typeParameters.map(async type => `\`${type.name}\`${type.extends ? ` extends ${await linkType(version, type.extends)}` : ""}${type.default ? ` = ${await linkType(version, type.default)}` : ""}`))).join("\n"),
+            inline: true
+        });
+    }
+
     if (clazz.constructor.parameters.length !== 0) {
         const params = clazz.constructor.parameters.map(p => `\`${p.text.includes("null") ? "?" : ""}${p.name}${p.optional ? "?" : ""}\``);
         let text = "";
@@ -593,6 +601,12 @@ async function methodRunner(this: Client, interaction: CommandInteraction, class
                         name:  "Parameters",
                         value: (await Promise.all(method.overloads[0].parameters.map(async p => `\`${p.text.includes("null") ? "?" : ""}${p.name}${p.optional ? "?" : ""}\` - ${await linkType(version, p.text)}\n${p.comment || ""}`))).join("\n") || "NONE"
                     },
+                    ...(method.overloads[0].typeParameters.length !== 0 ? [
+                        {
+                            name:  "Type Parameters",
+                            value: (await Promise.all(method.overloads[0].typeParameters.map(async type => `\`${type.name}\`${type.extends ? ` extends ${await linkType(version, type.extends)}` : ""}${type.default ? ` = ${await linkType(version, type.default)}` : ""}`))).join("\n")
+                        }
+                    ] : []),
                     {
                         name:  "Return",
                         value: await linkType(version, method.overloads[0].return!)
