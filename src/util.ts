@@ -168,7 +168,16 @@ const intrinsic = {
     unknown:   "[unknown](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown)",
     object:    "[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)",
     symbol:    "[Symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol)",
-    Buffer:    "[Buffer](https://nodejs.org/api/buffer.html)"
+    Buffer:    "[Buffer](https://nodejs.org/api/buffer.html)",
+    BigInt:    "[BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)",
+    Date:      "[Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)",
+    Promise:   "[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)",
+    Error:     "[Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)",
+    Array:     "[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)",
+    Map:       "[Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)",
+    Set:       "[Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)",
+    Function:  "[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)"
+
 };
 export async function linkType(version: string, text: string) {
     const root = await getVersion(version);
