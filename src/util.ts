@@ -1,7 +1,7 @@
 import run from "./docs/run";
 import type { Root } from "./docs/types";
 import config from "../config.json" assert { type: "json" };
-import type { AutocompleteChoice, CreateGuildApplicationCommandOptions } from "oceanic.js";
+import type { AutocompleteChoice, CreateGuildApplicationCommandOptions, User } from "oceanic.js";
 import { fetch } from "undici";
 import type { JSONOutput } from "typedoc";
 import { gte } from "semver";
@@ -235,4 +235,23 @@ export function truncateChoices(values: Array<AutocompleteChoice>) {
             value: "more_count"
         }
     ];
+}
+
+
+export async function getSnipe(channel: string, type: "delete" | "edit") {
+    const cache = await readCache();
+    const snipe = cache.snipes.sort((a,b) => b.timestamp - a.timestamp).find(sn => sn.channel === channel && sn.type === type);
+    if (!snipe) {
+        return null;
+    }
+    cache.snipes.splice(cache.snipes.indexOf(snipe), 1);
+    await writeCache(cache);
+    return snipe;
+}
+
+export async function saveSnipe(author: User, channel: string, content: string, oldContent: string | null, type: "delete" | "edit") {
+    const cache = await readCache();
+    const index = cache.snipes.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content, oldContent, timestamp: Date.now(), type });
+    await writeCache(cache);
+    return cache.snipes[index];
 }

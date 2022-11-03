@@ -595,7 +595,7 @@ async function methodRunner(this: Client, interaction: CommandInteraction, class
                 fields:      [
                     {
                         name:  "Kind",
-                        value: "Event"
+                        value: "Method"
                     },
                     {
                         name:  "Parameters",
