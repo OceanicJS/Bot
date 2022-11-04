@@ -260,7 +260,7 @@ export async function eventRunner(this: Client, interaction: CommandInteraction,
             {
                 title:       `${className}.on("${event.name}") @ ${version}`,
                 url:         docsURL(version, "interface", event.module, event.interface, event.name),
-                description: event.comment ?? "[NONE]",
+                description: event.comment,
                 fields:      [
                     {
                         name:  "Kind",
@@ -297,7 +297,7 @@ export async function classPropertyRunner(this: Client, interaction: CommandInte
             {
                 title:       `${className} -> ${property.name} @ ${version}`,
                 url:         docsURL(version, "class", clazz.module, className, property.name),
-                description: property.comment ?? "[NONE]",
+                description: property.comment,
                 fields:      [
                     {
                         name:  "Kind",
@@ -334,7 +334,7 @@ export async function interfacePropertyRunner(this: Client, interaction: Command
             {
                 title:       `${interfaceName} -> ${property.name} @ ${version}`,
                 url:         docsURL(version, "interface", iface.module, interfaceName, property.name),
-                description: property.comment ?? "[NONE]",
+                description: property.comment,
                 fields:      [
                     {
                         name:  "Kind",
@@ -371,7 +371,7 @@ export async function methodRunner(this: Client, interaction: CommandInteraction
             {
                 title:       `${className}#${method.name}() @ ${version}`,
                 url:         docsURL(version, "class", clazz.module, className, method.name),
-                description: method.comment ?? "[NONE]",
+                description: method.comment,
                 fields:      [
                     {
                         name:  "Kind",
