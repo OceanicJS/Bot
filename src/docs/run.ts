@@ -144,4 +144,4 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
     await writeFile(`${config.dataDir}/docs/${version}.json`, JSON.stringify(root));
 }
 
-// await run(JSON.parse(await readFile("/home/donovan/Downloads/v1.2.1.json", "utf8")) as JSONOutput.ProjectReflection, "1.2.1");
+// await run(JSON.parse(await readFile("/home/donovan/Downloads/v1.3.0.json", "utf8")) as JSONOutput.ProjectReflection, "1.2.1");

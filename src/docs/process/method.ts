@@ -4,15 +4,23 @@ import { getName } from "../idToName.js";
 import { JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processMethod(data: JSONOutput.DeclarationReflection) {
+    if (data.name === "get") {
+        console.log(data);
+    }
     const method: Method = {
-        comment:   data.comment?.summary.reduce((a, b) => a + b.text, ""),
+        comment:   undefined,
         name:      data.name,
         static:    data.flags.isStatic ?? false,
         overloads: []
     };
 
     if (data.signatures) {
+        let useComment = true;
         for (const signature of data.signatures.filter(s => s.kind === ReflectionKind.CallSignature)) {
+            if (useComment && signature.comment !== undefined) {
+                method.comment = signature.comment?.summary.reduce((a, b) => a + b.text, "");
+                useComment = false;
+            }
             const overload: Overload = {
                 parameters:     [],
                 typeParameters: [],
