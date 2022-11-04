@@ -5,7 +5,7 @@ import {
     linkType,
     truncateChoices,
     versions
-} from "./util";
+} from "./util.js";
 import {
     AutocompleteInteraction,
     Client,

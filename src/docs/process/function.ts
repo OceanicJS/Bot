@@ -1,6 +1,6 @@
-import convertType from "../convertType";
-import type { Function } from "../types";
-import { getName } from "../idToName";
+import convertType from "../convertType.js";
+import type { Function } from "../types.js";
+import { getName } from "../idToName.js";
 import { JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processFunction(data: JSONOutput.DeclarationReflection, module: string) {

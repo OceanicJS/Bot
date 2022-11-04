@@ -1,5 +1,5 @@
-import convertType from "../convertType";
-import type { Variable } from "../types";
+import convertType from "../convertType.js";
+import type { Variable } from "../types.js";
 import type { JSONOutput } from "typedoc";
 
 export default function processVariable(data: JSONOutput.DeclarationReflection, module: string) {

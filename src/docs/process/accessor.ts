@@ -1,5 +1,5 @@
-import convertType from "../convertType";
-import { getName } from "../idToName";
+import convertType from "../convertType.js";
+import { getName } from "../idToName.js";
 import type { JSONOutput } from "typedoc";
 
 export default function processAccessor(data: JSONOutput.DeclarationReflection) {

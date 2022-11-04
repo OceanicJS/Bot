@@ -1,5 +1,5 @@
-import { getName } from "../idToName";
-import type { Reference } from "../types";
+import { getName } from "../idToName.js";
+import type { Reference } from "../types.js";
 import type { JSONOutput } from "typedoc";
 
 export default function processReference(data: JSONOutput.ReferenceReflection) {

@@ -1,5 +1,5 @@
-import type { Enum } from "../types";
-import convertType from "../convertType";
+import type { Enum } from "../types.js";
+import convertType from "../convertType.js";
 import { JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processEnum(data: JSONOutput.DeclarationReflection, module: string) {

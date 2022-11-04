@@ -1,5 +1,5 @@
-import { checkVersion, defaultVersion } from "../util/util";
-import Command from "../util/Command";
+import { checkVersion, defaultVersion } from "../util/util.js";
+import Command from "../util/Command.js";
 import {
     classPropertyRunner,
     classRunner,
@@ -8,7 +8,7 @@ import {
     interfacePropertyRunner,
     methodRunner,
     typeRunner
-} from "../util/docs";
+} from "../util/docs.js";
 import { ApplicationCommandOptionTypes, ApplicationCommandTypes, Client, CommandInteraction } from "oceanic.js";
 import type { ApplicationCommandBuilder } from "@oceanicjs/builders";
 import assert from "node:assert";

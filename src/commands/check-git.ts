@@ -1,5 +1,5 @@
-import Command from "../util/Command";
-import runGit from "../util/git";
+import Command from "../util/Command.js";
+import runGit from "../util/git.js";
 import { ApplicationCommandTypes, Client, CommandInteraction, MessageFlags } from "oceanic.js";
 
 export default class CheckGitCommand extends Command {

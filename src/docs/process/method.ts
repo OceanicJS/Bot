@@ -1,6 +1,6 @@
-import convertType from "../convertType";
-import type { Method, Overload } from "../types";
-import { getName } from "../idToName";
+import convertType from "../convertType.js";
+import type { Method, Overload } from "../types.js";
+import { getName } from "../idToName.js";
 import { JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processMethod(data: JSONOutput.DeclarationReflection) {

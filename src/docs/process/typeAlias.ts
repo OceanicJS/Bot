@@ -1,5 +1,5 @@
-import convertType from "../convertType";
-import type { TypeAlias } from "../types";
+import convertType from "../convertType.js";
+import type { TypeAlias } from "../types.js";
 import type { JSONOutput } from "typedoc";
 
 export default function processTypeAlias(data: JSONOutput.DeclarationReflection, module: string) {

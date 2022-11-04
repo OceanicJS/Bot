@@ -1,5 +1,5 @@
-import Command from "../util/Command";
-import { filter, getSnipe } from "../util/util";
+import Command from "../util/Command.js";
+import { filter, getSnipe } from "../util/util.js";
 import type { ApplicationCommandBuilder } from "@oceanicjs/builders";
 import {
     ApplicationCommandOptionTypes,

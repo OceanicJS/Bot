@@ -1,4 +1,4 @@
-import { getName } from "./idToName";
+import { getName } from "./idToName.js";
 import type { JSONOutput } from "typedoc";
 function resolveArrayType(type: JSONOutput.ArrayType, level = 1): { level: number; type: string; } {
     return type.elementType.type === "array" ? resolveArrayType(type.elementType, level++) : { type: convertType(type.elementType), level };

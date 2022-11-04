@@ -1,5 +1,5 @@
-import Command from "../util/Command";
-import { readCache } from "../util/util";
+import Command from "../util/Command.js";
+import { readCache } from "../util/util.js";
 import { ApplicationCommandTypes, Client, CommandInteraction, MessageFlags } from "oceanic.js";
 
 export default class CommandsCommand extends Command {

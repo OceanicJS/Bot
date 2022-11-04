@@ -1,4 +1,4 @@
-import Command from "../util/Command";
+import Command from "../util/Command.js";
 import type { ApplicationCommandBuilder } from "@oceanicjs/builders";
 import {
     ApplicationCommandOptionTypes,

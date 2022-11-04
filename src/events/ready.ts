@@ -1,6 +1,6 @@
 import config from "../../config.json" assert { type: "json" };
-import runGit from "../util/git";
-import Commands from "../util/Commands";
+import runGit from "../util/git.js";
+import Commands from "../util/Commands.js";
 import { ActivityTypes, Client } from "oceanic.js";
 
 export default async function readyEvent(this: Client) {

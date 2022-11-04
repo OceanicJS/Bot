@@ -1,6 +1,6 @@
-import { defaultVersion } from "../util/util";
-import { handleAutocomplete } from "../util/docs";
-import Commands from "../util/Commands";
+import { defaultVersion } from "../util/util.js";
+import { handleAutocomplete } from "../util/docs.js";
+import Commands from "../util/Commands.js";
 import { AnyInteractionGateway, Client, InteractionTypes } from "oceanic.js";
 
 export default async function interactionCreateEvent(this: Client, interaction: AnyInteractionGateway) {

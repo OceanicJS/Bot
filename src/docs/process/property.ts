@@ -1,6 +1,6 @@
-import convertType from "../convertType";
-import { getName } from "../idToName";
-import type { Property } from "../types";
+import convertType from "../convertType.js";
+import { getName } from "../idToName.js";
+import type { Property } from "../types.js";
 import type { JSONOutput } from "typedoc";
 
 export default function processProperty(data: JSONOutput.DeclarationReflection) {

@@ -1,4 +1,3 @@
-
 const nameMap = new Map<number, string>();
 
 export function getMap() {

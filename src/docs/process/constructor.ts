@@ -1,6 +1,6 @@
-import convertType from "../convertType";
-import type { Constructor } from "../types";
-import { getName } from "../idToName";
+import convertType from "../convertType.js";
+import type { Constructor } from "../types.js";
+import { getName } from "../idToName.js";
 import { JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processConstructor(data: JSONOutput.DeclarationReflection) {

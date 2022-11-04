@@ -1,4 +1,4 @@
-import type { Class } from "./types";
+import type { Class } from "./types.js";
 import FuzzySearch from "fuzzy-search";
 import { readFile } from "node:fs/promises";
 const data = JSON.parse(await readFile(new URL("classes.json", import.meta.url), "utf8")) as Array<Class>;

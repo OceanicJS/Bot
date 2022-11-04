@@ -1,6 +1,6 @@
-import type Command from "./Command";
-import { readCache, writeCache } from "./util";
-import type { EmptyCommand } from "./Command";
+import type Command from "./Command.js";
+import { readCache, writeCache } from "./util.js";
+import type { EmptyCommand } from "./Command.js";
 import config from "../../config.json" assert { type: "json" };
 import { Client, CommandInteraction, MessageFlags } from "oceanic.js";
 import { readdir } from "node:fs/promises";
