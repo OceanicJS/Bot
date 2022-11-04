@@ -22,7 +22,6 @@ export default abstract class Command {
         const builder = new ApplicationCommandBuilder(this.type, this.name)
             .setDescription(this.description);
         this.setOptions?.(builder);
-        console.log(builder);
         if (this.defaultMemberPermissions !== undefined) {
             builder.setDefaultMemberPermissions(this.defaultMemberPermissions);
         }
