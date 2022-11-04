@@ -1,4 +1,4 @@
-import { saveSnipe } from "../util";
+import { saveSnipe } from "../util/util";
 import type {
     AnyTextChannelWithoutGroup,
     Client,

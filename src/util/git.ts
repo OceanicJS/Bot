@@ -1,5 +1,5 @@
 import config from "../../config.json" assert { type: "json" };
-import { readCache, truncate, truncateWords, writeCache } from "../util";
+import { readCache, truncate, truncateWords, writeCache } from "./util";
 import { Octokit } from "@octokit/rest";
 import { Client, DiscordHTTPError } from "oceanic.js";
 const octo = new Octokit({

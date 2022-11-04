@@ -1,0 +1,51 @@
+import type Command from "./Command";
+import { readCache, writeCache } from "./util";
+import type { EmptyCommand } from "./Command";
+import config from "../../config.json" assert { type: "json" };
+import { Client, CommandInteraction, MessageFlags } from "oceanic.js";
+import { readdir } from "node:fs/promises";
+
+const commandDir = new URL("../commands", import.meta.url).pathname;
+
+
+export default class Commands {
+    static commandMap = new Map<string, Command>();
+    static commands: Array<Command> = [];
+
+    static async handle(client: Client, interaction: CommandInteraction) {
+        const command = this.commandMap.get(interaction.data.name);
+        await (command ? command.run.call(client, interaction) : interaction.createMessage({ content: "I couldn't figure out how to execute that command.", flags: MessageFlags.EPHEMERAL }));
+    }
+    static async load() {
+        const files = await readdir(commandDir, { withFileTypes: true });
+        for (const file of files) {
+            if (file.isFile()) {
+                const command = new ((await import(`${commandDir}/${file.name}`) as { default: typeof EmptyCommand; }).default)();
+                this.commandMap.set(command.name, command);
+                this.commands.push(command);
+            }
+        }
+    }
+
+    static async register(client: Client) {
+        const commands = this.toJSON();
+        const cache = await readCache();
+        if (JSON.stringify(commands) !== JSON.stringify(cache.commands)) {
+            let ids: Record<string, string>;
+            try {
+                ids = Object.fromEntries((await client.application.bulkEditGuildCommands(config.guild, commands)).map(b => [b.name, b.id]));
+            } catch (err) {
+                console.log("Command registration error, index list:");
+                console.log(commands.map((c, i) => `${i}: ${c.name}`).join("\n"));
+                throw err;
+            }
+            cache.commands = commands;
+            cache.commandIDs = ids;
+            await writeCache(cache);
+        }
+    }
+
+    static toJSON() {
+        return this.commands.map(command => command.toJSON());
+    }
+}

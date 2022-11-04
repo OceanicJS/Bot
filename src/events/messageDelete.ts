@@ -1,4 +1,4 @@
-import { saveSnipe } from "../util";
+import { saveSnipe } from "../util/util";
 import { Client, Message, PossiblyUncachedMessage } from "oceanic.js";
 
 export default async function messageDeleteEvent(this: Client, message: PossiblyUncachedMessage) {

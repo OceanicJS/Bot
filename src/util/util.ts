@@ -1,6 +1,6 @@
-import run from "./docs/run";
-import type { Root } from "./docs/types";
-import config from "../config.json" assert { type: "json" };
+import run from "../docs/run";
+import type { Root } from "../docs/types";
+import config from "../../config.json" assert { type: "json" };
 import type { AutocompleteChoice, CreateGuildApplicationCommandOptions, User } from "oceanic.js";
 import { fetch } from "undici";
 import type { JSONOutput } from "typedoc";
