@@ -4,7 +4,7 @@
   "description": "A bot made with Oceanic.",
   "main": "index.ts",
   "scripts": {
-    "start": "node --no-warnings --no-deprecation --experimental-specifier-resolution=node dist/src/index.js",
+    "start": "node --no-warnings --no-deprecation --experimental-specifier-resolution=node dist/index.js",
     "build": "tsc",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
