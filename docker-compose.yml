@@ -4,9 +4,10 @@ version: "3"
 services:
   oceanic-bot:
     container_name: oceanic-bot
-    build: .
+    image: ghcr.io/oceanicjs/bot
     volumes:
       - ./data:/data:z
+      - ./config.json:/app/config.json
     restart: always
     hostname: oceanic-bot.containers.local
     networks:
