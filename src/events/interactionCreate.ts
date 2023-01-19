@@ -1,7 +1,7 @@
 import { defaultVersion } from "../util/util.js";
 import { handleAutocomplete } from "../util/docs.js";
 import Commands from "../util/Commands.js";
-import { AnyInteractionGateway, Client, InteractionTypes } from "oceanic.js";
+import { type AnyInteractionGateway, type Client, InteractionTypes } from "oceanic.js";
 
 export default async function interactionCreateEvent(this: Client, interaction: AnyInteractionGateway) {
     if (interaction.type === InteractionTypes.APPLICATION_COMMAND) {

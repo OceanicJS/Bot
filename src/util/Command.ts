@@ -1,10 +1,10 @@
 import { ApplicationCommandBuilder } from "@oceanicjs/builders";
 import {
     ApplicationCommandTypes,
-    Client,
-    CommandInteraction,
-    Permission,
-    PermissionName
+    type Client,
+    type CommandInteraction,
+    type Permission,
+    type PermissionName
 } from "oceanic.js";
 
 export default abstract class Command {

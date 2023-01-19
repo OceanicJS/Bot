@@ -1,9 +1,14 @@
-import { readCache, truncate, truncateWords, writeCache } from "./util.js";
-import config from "../../config.json" assert { type: "json" };
+import {
+    Config,
+    readCache,
+    truncate,
+    truncateWords,
+    writeCache
+} from "./util.js";
 import { Octokit } from "@octokit/rest";
-import { Client, DiscordHTTPError } from "oceanic.js";
+import { type Client, DiscordHTTPError } from "oceanic.js";
 const octo = new Octokit({
-    auth: config.git
+    auth: Config.git
 });
 
 export default async function runGit(this: Client) {
@@ -30,7 +35,7 @@ export default async function runGit(this: Client) {
                 }
                 log += newLog;
             }
-            await this.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
+            await this.rest.webhooks.execute(Config.docsWebhook.id, Config.docsWebhook.token, {
                 embeds: [
                     {
                         color:  7506394,
@@ -58,26 +63,26 @@ export default async function runGit(this: Client) {
     const temp: Array<[number, string]> = [];
     for (const pull of pulls.reverse()) {
         let state: "open" | "closed" | undefined;
-        if (!num.includes(pull.number)) {
-            temp.push([pull.number, pull.state]);
-            console.log("New PR:", pull.number, pull.state);
-            state = pull.state as "open" | "closed";
-        } else {
+        if (num.includes(pull.number)) {
             const oldState = cache.pulls.find(([id]) => id === pull.number)![1];
-            if (pull.state !== oldState) {
+            if (pull.state === oldState) {
+                continue;
+            } else {
                 console.log("PR state changed:", pull.id, oldState, pull.state);
                 cache.pulls.find(([id]) => id === pull.number)![1] = pull.state;
                 state = pull.state as "open" | "closed";
-            } else {
-                continue;
             }
+        } else {
+            temp.push([pull.number, pull.state]);
+            console.log("New PR:", pull.number, pull.state);
+            state = pull.state as "open" | "closed";
         }
 
         if (state && num.length !== 0) {
             try {
                 switch (state) {
                     case "open": {
-                        await this.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
+                        await this.rest.webhooks.execute(Config.docsWebhook.id, Config.docsWebhook.token, {
                             embeds: [
                                 {
                                     color:  38912,
@@ -95,7 +100,7 @@ export default async function runGit(this: Client) {
                     }
 
                     case "closed": {
-                        await this.rest.webhooks.execute(config.docsWebhook.id, config.docsWebhook.token, {
+                        await this.rest.webhooks.execute(Config.docsWebhook.id, Config.docsWebhook.token, {
                             embeds: [
                                 {
                                     title:  `[discord/discord-api-docs] Pull request closed: #${pull.number} ${truncateWords(pull.title, 256)}`,

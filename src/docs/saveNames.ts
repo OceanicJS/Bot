@@ -1,5 +1,5 @@
 import { getMap, setName } from "./idToName.js";
-import { JSONOutput, ReflectionKind } from "typedoc";
+import { type JSONOutput, ReflectionKind } from "typedoc";
 
 export default function saveNames(project: JSONOutput.ProjectReflection) {
     if (project.children) {

@@ -8,8 +8,8 @@ import processTypeAlias from "./process/typeAlias.js";
 import processVariable from "./process/variable.js";
 import processFunction from "./process/function.js";
 import processReference from "./process/reference.js";
-import config from "../../config.json" assert { type: "json" };
-import { JSONOutput, ReflectionKind } from "typedoc";
+import { Config } from "../util/util.js";
+import { type JSONOutput, ReflectionKind } from "typedoc";
 import { writeFile } from "node:fs/promises";
 
 export default async function run(data: JSONOutput.ProjectReflection, version: string) {
@@ -141,7 +141,7 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
         }
     }
 
-    await writeFile(`${config.dataDir}/docs/${version}.json`, JSON.stringify(root));
+    await writeFile(`${Config.dataDir}/docs/${version}.json`, JSON.stringify(root));
 }
 
 // await run(JSON.parse(await readFile("/home/donovan/Downloads/v1.3.0.json", "utf8")) as JSONOutput.ProjectReflection, "1.2.1");

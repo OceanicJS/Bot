@@ -4,7 +4,7 @@ import processAccessor from "./accessor.js";
 import processMethod from "./method.js";
 import type { Class } from "../types.js";
 import convertType from "../convertType.js";
-import { JSONOutput, ReflectionKind } from "typedoc";
+import { type JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processClass(data: JSONOutput.DeclarationReflection, module: string) {
     const clazz: Class = {

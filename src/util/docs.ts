@@ -8,10 +8,10 @@ import {
 } from "./util.js";
 import {
     AutocompleteInteraction,
-    Client,
-    CommandInteraction,
-    EmbedField,
-    InteractionOptionsString,
+    type Client,
+    type CommandInteraction,
+    type EmbedField,
+    type InteractionOptionsString,
     MessageFlags
 } from "oceanic.js";
 import FuzzySearch from "fuzzy-search";
@@ -381,12 +381,12 @@ export async function methodRunner(this: Client, interaction: CommandInteraction
                         name:  "Parameters",
                         value: (await Promise.all(method.overloads[0].parameters.map(async p => `\`${p.text.includes("null") ? "?" : ""}${p.name}${p.optional ? "?" : ""}\` - ${await linkType(version, p.text)}\n${p.comment || ""}`))).join("\n") || "NONE"
                     },
-                    ...(method.overloads[0].typeParameters.length !== 0 ? [
+                    ...(method.overloads[0].typeParameters.length === 0 ? [] : [
                         {
                             name:  "Type Parameters",
                             value: (await Promise.all(method.overloads[0].typeParameters.map(async type => `${type.name}${type.extends ? ` extends ${await linkType(version, type.extends)}` : ""}${type.default ? ` = ${await linkType(version, type.default)}` : ""}`))).join("\n")
                         }
-                    ] : []),
+                    ]),
                     {
                         name:  "Return",
                         value: await linkType(version, method.overloads[0].return!)

@@ -1,7 +1,7 @@
 import convertType from "../convertType.js";
 import type { Function } from "../types.js";
 import { getName } from "../idToName.js";
-import { JSONOutput, ReflectionKind } from "typedoc";
+import { type JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processFunction(data: JSONOutput.DeclarationReflection, module: string) {
     // eslint-disable-next-line @typescript-eslint/ban-types

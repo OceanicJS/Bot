@@ -9,7 +9,7 @@ import {
     methodRunner,
     typeRunner
 } from "../util/docs.js";
-import { ApplicationCommandOptionTypes, ApplicationCommandTypes, Client, CommandInteraction } from "oceanic.js";
+import { ApplicationCommandOptionTypes, ApplicationCommandTypes, type Client, type CommandInteraction } from "oceanic.js";
 import type { ApplicationCommandBuilder } from "@oceanicjs/builders";
 import assert from "node:assert";
 

@@ -1,13 +1,25 @@
 import run from "../docs/run.js";
 import type { Root } from "../docs/types.js";
-import config from "../../config.json" assert { type: "json" };
 import type { AutocompleteChoice, CreateGuildApplicationCommandOptions, User } from "oceanic.js";
 import { fetch } from "undici";
 import type { JSONOutput } from "typedoc";
 import { gte } from "semver";
+import { parse } from "jsonc-parser";
 import type { PathLike } from "node:fs";
 import { access, readFile, writeFile } from "node:fs/promises";
 import { execSync } from "node:child_process";
+
+export interface IConfig {
+    dataDir: string;
+    docsWebhook: {
+        id: string;
+        token: string;
+    };
+    git: string;
+    guild: string;
+    skipGit: boolean;
+    token: string;
+}
 
 export interface Cache {
     commandIDs: Record<string, string>;
@@ -25,6 +37,8 @@ interface Snipe {
     timestamp: number;
     type: "delete" | "edit";
 }
+
+export const Config = parse(await readFile(new URL("../../config.jsonc", import.meta.url), "utf8")) as IConfig;
 
 export const filter = (str: string) => str.replace(/\[/g, "\\[").replace(/]/g, "\\]");
 export const exists = (path: PathLike) => access(path).then(() => true, () => false);
@@ -48,10 +62,10 @@ export const truncate = (str: string, maxLen: number) => {
     return `${str.slice(0, maxLen - 3)}...`;
 };
 export async function readCache() {
-    return (await exists(`${config.dataDir}/cache.json`)) ? JSON.parse(await readFile(`${config.dataDir}/cache.json`, "utf8")) as Cache : { commands: [], commandIDs: {}, commit: null, pulls: [], snipes: [] };
+    return (await exists(`${Config.dataDir}/cache.json`)) ? JSON.parse(await readFile(`${Config.dataDir}/cache.json`, "utf8")) as Cache : { commands: [], commandIDs: {}, commit: null, pulls: [], snipes: [] };
 }
 export async function writeCache(cache: Cache) {
-    await writeFile(`${config.dataDir}/cache.json`, JSON.stringify(cache, null, 2));
+    await writeFile(`${Config.dataDir}/cache.json`, JSON.stringify(cache, null, 2));
 }
 
 
@@ -67,11 +81,11 @@ setInterval(refreshVersions.bind(null), 6e5);
 refreshVersions();
 
 export async function checkVersion(version: string): Promise<boolean> {
-    if (!await exists(`${config.dataDir}/docs/${version}.json`)) {
+    if (await exists(`${Config.dataDir}/docs/${version}.json`)) {
+        return true;
+    } else {
         void getVersion(version);
         return false;
-    } else {
-        return true;
     }
 }
 export async function getVersion(version: string): Promise<Root | null> {
@@ -79,13 +93,13 @@ export async function getVersion(version: string): Promise<Root | null> {
         return null;
     }
 
-    if (!await exists(`${config.dataDir}/docs/${version}.json`)) {
+    if (!await exists(`${Config.dataDir}/docs/${version}.json`)) {
         const data = await fetch(`https://docs.oceanic.ws/v${version}/docs.json`).then(res => res.json() as Promise<JSONOutput.ProjectReflection>);
         await run(data, version);
         return getVersion(version);
     }
 
-    return JSON.parse(await readFile(`${config.dataDir}/docs/${version}.json`, "utf8")) as Root;
+    return JSON.parse(await readFile(`${Config.dataDir}/docs/${version}.json`, "utf8")) as Root;
 }
 
 export function docsURL(version: string, type: "class" | "interface" | "enum" | "typeAlias", module: string, name: string, otherName?: string) {

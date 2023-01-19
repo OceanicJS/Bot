@@ -4,8 +4,8 @@ import {
     ApplicationCommandOptionTypes,
     ApplicationCommandTypes,
     ChannelTypes,
-    Client,
-    CommandInteraction,
+    type Client,
+    type CommandInteraction,
     MessageFlags
 } from "oceanic.js";
 import type { ApplicationCommandBuilder } from "@oceanicjs/builders";

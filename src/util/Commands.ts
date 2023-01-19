@@ -1,8 +1,7 @@
 import type Command from "./Command.js";
-import { readCache, writeCache } from "./util.js";
+import { Config, readCache, writeCache } from "./util.js";
 import type { EmptyCommand } from "./Command.js";
-import config from "../../config.json" assert { type: "json" };
-import { Client, CommandInteraction, MessageFlags } from "oceanic.js";
+import { type Client, type CommandInteraction, MessageFlags } from "oceanic.js";
 import { readdir } from "node:fs/promises";
 
 const commandDir = new URL("../commands", import.meta.url).pathname;
@@ -33,7 +32,7 @@ export default class Commands {
         if (JSON.stringify(commands) !== JSON.stringify(cache.commands)) {
             let ids: Record<string, string>;
             try {
-                ids = Object.fromEntries((await client.application.bulkEditGuildCommands(config.guild, commands)).map(b => [b.name, b.id]));
+                ids = Object.fromEntries((await client.application.bulkEditGuildCommands(Config.guild, commands)).map(b => [b.name, b.id]));
             } catch (err) {
                 console.log("Command registration error, index list:");
                 console.log(commands.map((c, i) => `${i}: ${c.name}`).join("\n"));

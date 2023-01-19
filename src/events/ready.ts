@@ -1,7 +1,7 @@
-import config from "../../config.json" assert { type: "json" };
 import runGit from "../util/git.js";
 import Commands from "../util/Commands.js";
-import { ActivityTypes, Client } from "oceanic.js";
+import { Config } from "../util/util.js";
+import { ActivityTypes, type Client } from "oceanic.js";
 
 export default async function readyEvent(this: Client) {
     console.log("Ready As", this.user.tag);
@@ -11,7 +11,7 @@ export default async function readyEvent(this: Client) {
     setInterval(() => {
         void this.editStatus("online", [{ type: ActivityTypes.WATCHING, name: "https://oceanic.ws" } ]);
     }, 6e4);
-    if (!config.skipGit) {
+    if (!Config.skipGit) {
         await runGit.call(this);
         setInterval(async() => {
             const d = new Date();

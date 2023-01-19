@@ -1,11 +1,11 @@
-import config from "../config.json" assert { type: "json" };
+import { Config } from "./util/util.js";
 import { ActivityTypes, Client } from "oceanic.js";
 import { mkdir } from "node:fs/promises";
 
-await mkdir(`${config.dataDir}/docs`, { recursive: true });
+await mkdir(`${Config.dataDir}/docs`, { recursive: true });
 
 const client = new Client({
-    auth:    config.token,
+    auth:    Config.token,
     gateway: {
         intents:  ["GUILDS", "GUILD_MESSAGES", "MESSAGE_CONTENT", "GUILD_MEMBERS"],
         presence: {

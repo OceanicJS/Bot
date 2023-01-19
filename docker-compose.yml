@@ -7,7 +7,7 @@ services:
     image: ghcr.io/oceanicjs/bot
     volumes:
       - ./data:/data:z
-      - ./config.json:/app/config.json
+      - ./config.jsonc:/app/config.jsonc
     restart: always
     hostname: oceanic-bot.containers.local
     networks:

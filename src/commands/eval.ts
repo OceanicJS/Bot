@@ -3,8 +3,8 @@ import type { ApplicationCommandBuilder } from "@oceanicjs/builders";
 import {
     ApplicationCommandOptionTypes,
     ApplicationCommandTypes,
-    Client,
-    CommandInteraction,
+    type Client,
+    type CommandInteraction,
     Permissions
 } from "oceanic.js";
 
@@ -15,9 +15,7 @@ export default class EvalCommand extends Command {
     override type = ApplicationCommandTypes.CHAT_INPUT;
     override async run(this: Client, interaction: CommandInteraction) {
         // eslint-disable-next-line unicorn/prefer-ternary
-        if (interaction.user.id !== "242843345402069002") {
-            return interaction.createMessage({ content: "Sike" });
-        } else {
+        if (interaction.user.id === "242843345402069002") {
             return interaction.createMessage({
                 embeds: [
                     {
@@ -27,6 +25,8 @@ export default class EvalCommand extends Command {
                     }
                 ]
             });
+        } else {
+            return interaction.createMessage({ content: "Sike" });
         }
     }
 

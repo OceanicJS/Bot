@@ -1,7 +1,7 @@
 import processProperty from "./property.js";
 import type { Interface } from "../types.js";
 import convertType from "../convertType.js";
-import { JSONOutput, ReflectionKind } from "typedoc";
+import { type JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processInterface(data: JSONOutput.DeclarationReflection, module: string) {
     const iface: Interface = {

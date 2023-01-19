@@ -1,6 +1,6 @@
 import Command from "../util/Command.js";
 import { readCache } from "../util/util.js";
-import { ApplicationCommandTypes, Client, CommandInteraction, MessageFlags } from "oceanic.js";
+import { ApplicationCommandTypes, type Client, type CommandInteraction, MessageFlags } from "oceanic.js";
 
 export default class CommandsCommand extends Command {
     override description = "List my usable commands.";
