@@ -1,5 +1,6 @@
 import Command from "../util/Command.js";
 import { filter, getSnipe } from "../util/util.js";
+import EncryptionHandler from "../util/EncryptionHandler.js";
 import {
     ApplicationCommandOptionTypes,
     ApplicationCommandTypes,
@@ -35,7 +36,7 @@ export default class SnipeCommand extends Command {
                     fields: [
                         {
                             name:  "Content",
-                            value: filter(snipe.content || "[No content]").slice(0, 1024)
+                            value: filter(EncryptionHandler.decrypt(snipe.content) || "[No content]").slice(0, 1024)
                         }
                     ],
                     timestamp: new Date(snipe.timestamp).toISOString(),

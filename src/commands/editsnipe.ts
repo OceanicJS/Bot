@@ -1,4 +1,5 @@
 import Command from "../util/Command.js";
+import EncryptionHandler from "../util/EncryptionHandler.js";
 import { filter, getSnipe } from "../util/util.js";
 import type { ApplicationCommandBuilder } from "@oceanicjs/builders";
 import {
@@ -35,11 +36,11 @@ export default class EditSnipeCommand extends Command {
                     fields: [
                         {
                             name:  "New Content",
-                            value: filter(snipe.content || "[No content]").slice(0, 1024)
+                            value: filter(EncryptionHandler.decrypt(snipe.content) || "[No content]").slice(0, 1024)
                         },
                         {
                             name:  "Old Content",
-                            value: filter(snipe.oldContent || "[No content]").slice(0, 1024)
+                            value: filter((snipe.oldContent ? EncryptionHandler.decrypt(snipe.oldContent) : null) || "[No content]").slice(0, 1024)
                         }
                     ],
                     timestamp: new Date(snipe.timestamp).toISOString(),
