@@ -1,3 +1,4 @@
+import EncryptionHandler from "./EncryptionHandler.js";
 import run from "../docs/run.js";
 import type { Root } from "../docs/types.js";
 import type { AutocompleteChoice, CreateGuildApplicationCommandOptions, User } from "oceanic.js";
@@ -23,6 +24,8 @@ export interface IConfig {
         id: string;
         token: string;
     };
+    encryptionKey: string;
+    encryptionSalt: string;
     git: string;
     gitSecret: string;
     guild: string;
@@ -33,7 +36,7 @@ export interface Cache {
     commandIDs: Record<string, string>;
     commands: Array<CreateGuildApplicationCommandOptions>;
     commit: string | null;
-    connections: Record<string, { commits: number; token: string; }>;
+    connections: Record<string, { accessToken: string; commits: number; }>;
     pulls: Array<[id: number, state: string]>;
     snipes: Array<Snipe>;
 }
@@ -269,12 +272,17 @@ export async function getSnipe(channel: string, type: "delete" | "edit") {
     }
     cache.snipes.splice(cache.snipes.indexOf(snipe), 1);
     await writeCache(cache);
+    snipe.content = EncryptionHandler.decrypt(snipe.content);
+    if (snipe.oldContent !== null) {
+        snipe.oldContent = EncryptionHandler.decrypt(snipe.oldContent);
+    }
     return snipe;
 }
 
 export async function saveSnipe(author: User, channel: string, content: string, oldContent: string | null, type: "delete" | "edit") {
     const cache = await readCache();
-    const index = cache.snipes.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content, oldContent, timestamp: Date.now(), type });
+    cache.snipes = cache.snipes.slice(0, 10);
+    const index = cache.snipes.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content: EncryptionHandler.encrypt(content), oldContent: oldContent === null ? null : EncryptionHandler.encrypt(oldContent), timestamp: Date.now(), type });
     await writeCache(cache);
     return cache.snipes[index];
 }

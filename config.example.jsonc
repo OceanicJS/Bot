@@ -3,9 +3,9 @@
   "dataDir": "/data",
   "client": {
     "token": "Bot https://discord.com/developers/applications",
-    "id": "",
-    "secret": "",
-    "redirectURI": "https://bot.oceanic.ws/callback"
+    "id": "client id",
+    "secret": "client secret",
+    "redirectURI": "redirect uri for oauth"
   },
   "guild": "guild for commands",
   "docsWebhook": {
@@ -13,6 +13,8 @@
     "token": "webhook token for discord/discord-api-docs notifications"
   },
   "git": "https://github.com/settings/tokens",
-  "gitSecret": "",
-  "cookieSecret": ""
+  "gitSecret": "github webhook secret",
+  "cookieSecret": "cookie secret",
+  "encryptionKey": "general encryption key",
+  "encryptionSalt": "general encryption salt"
 }

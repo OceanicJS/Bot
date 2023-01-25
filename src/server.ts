@@ -1,4 +1,5 @@
 import { Config, getCommitCount, readCache, writeCache } from "./util/util.js";
+import EncryptionHandler from "./util/EncryptionHandler.js";
 import express from "express";
 import morgan from "morgan";
 import { Client, OAuthHelper, OAuthScopes } from "oceanic.js";
@@ -34,7 +35,7 @@ hook.on("push", async ({ payload: data }) => {
         for (const user of users) {
             const conn = cache.connections[user.toLowerCase()];
             if (conn) {
-                const helper = client.rest.oauth.getHelper(`Bearer ${conn.token}`);
+                const helper = client.rest.oauth.getHelper(`Bearer ${EncryptionHandler.decrypt(conn.accessToken)}`);
                 try {
                     await helper.updateRoleConnection(Config.client.id, {
                         metadata: {
@@ -111,8 +112,8 @@ const app = express()
             });
             const cache = await readCache();
             cache.connections[name.toLowerCase()] = {
-                token:   token.accessToken,
-                commits: commitCount
+                accessToken: EncryptionHandler.encrypt(token.accessToken),
+                commits:     commitCount
             };
             await writeCache(cache);
             return res.status(200).end(`Successfully linked via @${name}`);
