@@ -1,15 +1,12 @@
 import {
     Config,
+    octo,
     readCache,
     truncate,
     truncateWords,
     writeCache
 } from "./util.js";
-import { Octokit } from "@octokit/rest";
 import { type Client, DiscordHTTPError } from "oceanic.js";
-const octo = new Octokit({
-    auth: Config.git
-});
 
 export default async function runGit(this: Client) {
     const cache = await readCache();

@@ -5,28 +5,37 @@ import { fetch } from "undici";
 import type { JSONOutput } from "typedoc";
 import { gte } from "semver";
 import { parse } from "jsonc-parser";
+import { Octokit } from "@octokit/rest";
 import type { PathLike } from "node:fs";
 import { access, readFile, writeFile } from "node:fs/promises";
 import { execSync } from "node:child_process";
 
 export interface IConfig {
+    client: {
+        id: string;
+        redirectURI: string;
+        secret: string;
+        token: string;
+    };
+    cookieSecret: string;
     dataDir: string;
     docsWebhook: {
         id: string;
         token: string;
     };
     git: string;
+    gitSecret: string;
     guild: string;
     skipGit: boolean;
-    token: string;
 }
 
 export interface Cache {
     commandIDs: Record<string, string>;
     commands: Array<CreateGuildApplicationCommandOptions>;
     commit: string | null;
+    connections: Record<string, { commits: number; token: string; }>;
     pulls: Array<[id: number, state: string]>;
-    snipes: Array<Snipe> ;
+    snipes: Array<Snipe>;
 }
 
 interface Snipe {
@@ -62,7 +71,7 @@ export const truncate = (str: string, maxLen: number) => {
     return `${str.slice(0, maxLen - 3)}...`;
 };
 export async function readCache() {
-    return (await exists(`${Config.dataDir}/cache.json`)) ? JSON.parse(await readFile(`${Config.dataDir}/cache.json`, "utf8")) as Cache : { commands: [], commandIDs: {}, commit: null, pulls: [], snipes: [] };
+    return (await exists(`${Config.dataDir}/cache.json`)) ? JSON.parse(await readFile(`${Config.dataDir}/cache.json`, "utf8")) as Cache : { commands: [], commandIDs: {}, commit: null, connections: {}, pulls: [], snipes: [] };
 }
 export async function writeCache(cache: Cache) {
     await writeFile(`${Config.dataDir}/cache.json`, JSON.stringify(cache, null, 2));
@@ -268,4 +277,20 @@ export async function saveSnipe(author: User, channel: string, content: string, 
     const index = cache.snipes.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content, oldContent, timestamp: Date.now(), type });
     await writeCache(cache);
     return cache.snipes[index];
+}
+
+export const octo = new Octokit({
+    auth: Config.git
+});
+
+export async function getCommitCount(author: string, page = 1): Promise<number> {
+    const { data } = await octo.repos.listCommits({
+        owner:    "OceanicJS",
+        repo:     "Oceanic",
+        author,
+        per_page: 100,
+        page
+    });
+
+    return data.length === 100 ? 100 + await getCommitCount(author, page + 1) : data.length;
 }
