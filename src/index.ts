@@ -1,9 +1,8 @@
 import { Config, isDocker } from "./util/util.js";
 import { ActivityTypes, Client } from "oceanic.js";
-import { StatusServer } from "@uwu-codes/utils";
+import StatusServer, { type AnyServer } from "@uwu-codes/status-server";
 import { mkdir } from "node:fs/promises";
 import "./server.js";
-import { type Server } from "node:http";
 
 await mkdir(`${Config.dataDir}/docs`, { recursive: true });
 
@@ -38,7 +37,7 @@ process.on("unhandledRejection", (err, promise) => console.error("Unhandled Reje
         process.kill(process.pid, "SIGTERM");
     });
 
-let statusServer: Server | undefined;
+let statusServer: AnyServer | undefined;
 
 if (isDocker) {
     statusServer = StatusServer(() => client.ready);
