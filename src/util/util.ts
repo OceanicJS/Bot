@@ -49,6 +49,7 @@ interface Snipe {
     type: "delete" | "edit";
 }
 
+export const isDocker = await access("/.dockerenv").then(() => true, () => false) || await readFile("/proc/1/cgroup", "utf8").then(contents => contents.includes("docker"));
 export const Config = parse(await readFile(new URL("../../config.jsonc", import.meta.url), "utf8")) as IConfig;
 
 export const filter = (str: string) => str.replace(/\[/g, "\\[").replace(/]/g, "\\]");

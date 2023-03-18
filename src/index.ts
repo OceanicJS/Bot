@@ -1,7 +1,9 @@
-import { Config } from "./util/util.js";
+import { Config, isDocker } from "./util/util.js";
 import { ActivityTypes, Client } from "oceanic.js";
+import { StatusServer } from "@uwu-codes/utils";
 import { mkdir } from "node:fs/promises";
 import "./server.js";
+import { type Server } from "node:http";
 
 await mkdir(`${Config.dataDir}/docs`, { recursive: true });
 
@@ -23,9 +25,21 @@ await client.once("ready", (await import("./events/ready.js")).default.bind(clie
     .on("debug", (await import("./events/debug.js")).default.bind(client))
     .connect();
 
-process.on("unhandledRejection", (err, promise) => {
-    console.error("Unhandled Rejection:", err, promise);
-})
-    .on("uncaughtException", err => {
-        console.error("Uncaught Exception:", err);
+process.on("unhandledRejection", (err, promise) => console.error("Unhandled Rejection:", err, promise))
+    .on("uncaughtException", err => console.error("Uncaught Exception:", err))
+    .once("SIGINT", () => {
+        client.disconnect(false);
+        statusServer?.close();
+        process.kill(process.pid, "SIGINT");
+    })
+    .once("SIGTERM", () => {
+        client.disconnect(false);
+        statusServer?.close();
+        process.kill(process.pid, "SIGTERM");
     });
+
+let statusServer: Server | undefined;
+
+if (isDocker) {
+    statusServer = StatusServer(() => client.ready);
+}

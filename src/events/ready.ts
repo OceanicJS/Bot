@@ -2,12 +2,13 @@ import runGit from "../util/git.js";
 import Commands from "../util/Commands.js";
 import { Config } from "../util/util.js";
 import { ActivityTypes, RoleConnectionMetadataTypes, type Client } from "oceanic.js";
+import Logger from "@uwu-codes/logger";
 
 export default async function readyEvent(this: Client) {
-    console.log("Ready As", this.user.tag);
+    Logger.info("Ready As %s", this.user.tag);
     await Commands.load();
     await Commands.register(this);
-    await this.application.updateRoleConnectionsMetata([
+    await this.application.updateRoleConnectionsMetadata([
         {
             type:        RoleConnectionMetadataTypes.INTEGER_GREATER_THAN_OR_EQUAL,
             key:         "commits",
@@ -23,7 +24,7 @@ export default async function readyEvent(this: Client) {
         await runGit.call(this);
         setInterval(async() => {
             const d = new Date();
-            if (d.getMinutes() === 0 && d.getSeconds() === 0) {
+            if ((d.getMinutes() % 15) === 0 && d.getSeconds() === 0) {
                 await runGit.call(this);
             }
         }, 1e3);
