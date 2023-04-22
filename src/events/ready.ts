@@ -4,8 +4,13 @@ import { Config } from "../util/util.js";
 import { ActivityTypes, RoleConnectionMetadataTypes, type Client } from "oceanic.js";
 import Logger from "@uwu-codes/logger";
 
+let firstReady = false;
 export default async function readyEvent(this: Client) {
     Logger.info("Ready As %s", this.user.tag);
+    if (firstReady === true) {
+        return Logger.getLogger("Ready").warn("Ready event called after first ready, ignoring.");
+    }
+    firstReady = true;
     await Commands.load();
     await Commands.register(this);
     await this.application.updateRoleConnectionsMetadata([

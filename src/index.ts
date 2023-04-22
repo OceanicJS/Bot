@@ -17,13 +17,6 @@ const client = new Client({
     }
 });
 
-await client.once("ready", (await import("./events/ready.js")).default.bind(client))
-    .on("messageDelete", (await import("./events/messageDelete.js")).default.bind(client))
-    .on("messageUpdate", (await import("./events/messageUpdate.js")).default.bind(client))
-    .on("interactionCreate", (await import("./events/interactionCreate.js")).default.bind(client))
-    .on("debug", (await import("./events/debug.js")).default.bind(client))
-    .connect();
-
 process.on("unhandledRejection", (err, promise) => console.error("Unhandled Rejection:", err, promise))
     .on("uncaughtException", err => console.error("Uncaught Exception:", err))
     .once("SIGINT", () => {
@@ -36,6 +29,13 @@ process.on("unhandledRejection", (err, promise) => console.error("Unhandled Reje
         statusServer?.close();
         process.kill(process.pid, "SIGTERM");
     });
+
+await client.once("ready", (await import("./events/ready.js")).default.bind(client))
+    .on("messageDelete", (await import("./events/messageDelete.js")).default.bind(client))
+    .on("messageUpdate", (await import("./events/messageUpdate.js")).default.bind(client))
+    .on("interactionCreate", (await import("./events/interactionCreate.js")).default.bind(client))
+    .on("debug", (await import("./events/debug.js")).default.bind(client))
+    .connect();
 
 let statusServer: AnyServer | undefined;
 
