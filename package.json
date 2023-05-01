@@ -45,7 +45,7 @@
     "fuzzy-search": "^3.2.1",
     "jsonc-parser": "^3.2.0",
     "morgan": "^1.10.0",
-    "oceanic.js": "^1.6.1-dev.f0c94c8",
+    "oceanic.js": "^1.6.1-dev.a35b6b3",
     "semver": "^7.5.0",
     "typedoc": "^0.23.28"
   },

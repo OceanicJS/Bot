@@ -35,6 +35,7 @@ await client.once("ready", (await import("./events/ready.js")).default.bind(clie
     .on("messageUpdate", (await import("./events/messageUpdate.js")).default.bind(client))
     .on("interactionCreate", (await import("./events/interactionCreate.js")).default.bind(client))
     .on("debug", (await import("./events/debug.js")).default.bind(client))
+    .on("error", (await import("./events/error.js")).default.bind(client))
     .connect();
 
 let statusServer: AnyServer | undefined;
