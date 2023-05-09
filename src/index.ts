@@ -1,7 +1,7 @@
 import { Config, isDocker } from "./util/util.js";
-import { ActivityTypes, Client } from "oceanic.js";
+import { ActivityTypes, Client, type ClientEvents } from "oceanic.js";
 import StatusServer, { type AnyServer } from "@uwu-codes/status-server";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readdir } from "node:fs/promises";
 import "./server.js";
 
 await mkdir(`${Config.dataDir}/docs`, { recursive: true });
@@ -30,13 +30,13 @@ process.on("unhandledRejection", (err, promise) => console.error("Unhandled Reje
         process.kill(process.pid, "SIGTERM");
     });
 
-await client.once("ready", (await import("./events/ready.js")).default.bind(client))
-    .on("messageDelete", (await import("./events/messageDelete.js")).default.bind(client))
-    .on("messageUpdate", (await import("./events/messageUpdate.js")).default.bind(client))
-    .on("interactionCreate", (await import("./events/interactionCreate.js")).default.bind(client))
-    .on("debug", (await import("./events/debug.js")).default.bind(client))
-    .on("error", (await import("./events/error.js")).default.bind(client))
-    .connect();
+const events = await readdir(new URL("events", import.meta.url));
+for (const file of events) {
+    const event = file.split(".").slice(0, -1).join(".") as keyof ClientEvents;
+    client.on(event, ((await import(`./events/${event}.js`)) as { default(): void; }).default.bind(client));
+}
+
+await client.connect();
 
 let statusServer: AnyServer | undefined;
 

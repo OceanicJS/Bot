@@ -8,7 +8,8 @@ let firstReady = false;
 export default async function readyEvent(this: Client) {
     Logger.info("Ready As %s", this.user.tag);
     if (firstReady === true) {
-        return Logger.getLogger("Ready").warn("Ready event called after first ready, ignoring.");
+        Logger.getLogger("Ready").warn("Ready event called after first ready, ignoring.");
+        return;
     }
     firstReady = true;
     await Commands.load();
