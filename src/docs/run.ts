@@ -84,6 +84,12 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
                         break;
                     }
 
+                    // I can't be bothered to handle this right now
+                    case ReflectionKind.Namespace: {
+                        console.debug(`Skipping namespace ${child2.name} (${child2.id})`);
+                        break;
+                    }
+
                     default: {
                         throw new Error(`Unexpected kind ${ReflectionKind[child2.kind]} (${child2.kind}) for ${child2.name} (${child2.id})`);
                     }

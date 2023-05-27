@@ -219,7 +219,7 @@ export async function linkType(version: string, text: string) {
     const enumMatches = text.match(new RegExp(`\\b(${enumNames.join("|")})\\b`, "g")) ?? [];
     const interfaceMatches = text.match(new RegExp(`\\b(${interfaceNames.join("|")})\\b`, "g")) ?? [];
     const typeAliasMatches = text.match(new RegExp(`\\b(${typeAliasNames.join("|")})\\b`, "g")) ?? [];
-    const intrinsicMatches = text.match(/\b(string|number|boolean|any|void|undefined|null|never|unknown|object|symbol|buffer)\b/gi) ?? [];
+    const intrinsicMatches = text.match(new RegExp(`\\b(${Object.keys(intrinsic).join("|")})\\b`, "gi")) ?? [];
 
     for (const match of classMatches) {
         const clazz = root.classes.find(c => c.name === match);
@@ -242,7 +242,7 @@ export async function linkType(version: string, text: string) {
     for (const match of typeAliasMatches) {
         const typeAlias = root.typeAliases.find(c => c.name === match);
         if (typeAlias) {
-            text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "typeAlias", typeAlias.module, typeAlias.name)})`);
+            text = text.replace(new RegExp(`\\b(${match})\\b`, "gi"), `[${match}](${docsURL(version, "typeAlias", typeAlias.module, typeAlias.name)})`);
         }
     }
     for (const match of intrinsicMatches) {

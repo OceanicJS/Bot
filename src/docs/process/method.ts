@@ -4,9 +4,6 @@ import { getName } from "../idToName.js";
 import { type JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processMethod(data: JSONOutput.DeclarationReflection) {
-    if (data.name === "get") {
-        console.log(data);
-    }
     const method: Method = {
         comment:   undefined,
         name:      data.name,
