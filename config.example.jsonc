@@ -16,5 +16,9 @@
   "gitSecret": "github webhook secret",
   "cookieSecret": "cookie secret",
   "encryptionKey": "general encryption key",
-  "encryptionSalt": "general encryption salt"
+  "encryptionSalt": "general encryption salt",
+  "degenerateWebook": {
+    "id": "webhook id for degenerate notifications",
+    "token": "webhook token for degenerate notifications"
+  }
 }
