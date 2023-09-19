@@ -28,8 +28,26 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
     if (data.children) {
         for (const child of data.children) {
             if (child.kind !== ReflectionKind.Module) {
-                throw new Error(`Expected ${ReflectionKind[ReflectionKind.Module]} (${ReflectionKind.Module}), got ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
+                switch (child.kind) {
+                    case ReflectionKind.Class: {
+                        const clazz = processClass(child, child.name);
+                        root.classes.push(clazz);
+                        break;
+                    }
+
+                    case ReflectionKind.Interface: {
+                        const iface = processInterface(child, child.name);
+                        root.interfaces.push(iface);
+                        break;
+                    }
+
+                    default: {
+                        throw new Error(`Unexpected kind ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
+                    }
+                }
+                continue;
             }
+
             if (!child.children) {
                 continue;
             }
@@ -79,10 +97,15 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
                     }
 
                     case ReflectionKind.Reference: {
+                        if (child2.variant !== "reference") {
+                            console.debug(`Skipping ${child2.variant} ${ReflectionKind[child2.kind]} (${child2.kind}) for ${child2.name} (${child2.id})`);
+                            continue;
+                        }
                         const ref = processReference(child2 as JSONOutput.ReferenceReflection);
                         root.references.push(ref);
                         break;
                     }
+
 
                     // I can't be bothered to handle this right now
                     case ReflectionKind.Namespace: {

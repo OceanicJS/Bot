@@ -4,7 +4,7 @@ import { type JSONOutput, ReflectionKind } from "typedoc";
 export default function saveNames(project: JSONOutput.ProjectReflection) {
     if (project.children) {
         for (const child of project.children) {
-            if (child.kind !== ReflectionKind.Module) {
+            if (![ReflectionKind.Module, ReflectionKind.Class, ReflectionKind.Interface].includes(child.kind)) {
                 throw new Error(`Expected ${ReflectionKind[ReflectionKind.Module]} (${ReflectionKind.Module}), got ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
             }
             setName(child.id, child.name);

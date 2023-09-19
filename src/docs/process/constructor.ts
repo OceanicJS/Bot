@@ -16,7 +16,7 @@ export default function processConstructor(data: JSONOutput.DeclarationReflectio
                 continue;
             }
             if (param.type && "name" in param.type && param.type.name === "default" && "id" in param.type && param.type.id !== undefined) {
-                param.type.name = getName(param.type.id);
+                param.type.name = getName((param.type as { id: number; }).id);
             }
             construct.parameters.push({
                 name:     param.name,

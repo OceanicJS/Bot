@@ -6,7 +6,7 @@ function resolveArrayType(type: JSONOutput.ArrayType, level = 1): { level: numbe
 
 export default function convertType(type: JSONOutput.SomeType): string {
     if ("name" in type && type.name === "default" && "id" in type && type.id !== undefined) {
-        type.name = getName(type.id);
+        type.name = getName((type as {id: number; }).id);
     }
     switch (type.type) {
         case "array": {
@@ -51,7 +51,7 @@ export default function convertType(type: JSONOutput.SomeType): string {
             return `{ [${readonlyModifier ? "readonly " : ""}${nameType ? `${convertType(nameType)} in ` : ""}${parameter}${optionalModifier ? "?" : ""}: ${convertType(parameterType)}]${templateType ? ` extends ${convertType(templateType)}` : ""} }`;
         }
 
-        case "named-tuple-member": {
+        case "namedTupleMember": {
             const { name, isOptional, element } = type;
             return `${name}${isOptional ? "?" : ""}: ${convertType(element)}`;
         }
@@ -77,6 +77,9 @@ export default function convertType(type: JSONOutput.SomeType): string {
         }
 
         case "reference": {
+            if ("name" in type && type.name === "default" && "target" in type && type.target !== undefined) {
+                type.name = typeof type.target === "object" ? type.target.qualifiedName : getName(type.target);
+            }
             const { name, typeArguments } = type;
             return `${name}${typeArguments ? `<${typeArguments.map(convertType).join(", ")}>` : ""}`;
         }
@@ -110,7 +113,7 @@ export default function convertType(type: JSONOutput.SomeType): string {
             return `...${convertType(type.elementType)}`;
         }
 
-        case "template-literal": {
+        case "templateLiteral": {
             const { head, tail } = type;
             return `\`${head}${tail.map(([t, literal]) => `\${${convertType(t)}}${literal}`).join("")}\``;
         }
@@ -133,6 +136,7 @@ export default function convertType(type: JSONOutput.SomeType): string {
         }
 
         default: {
+            console.log(`TODO Type: ${(type as { type: string; }).type}`);
             return `TODO: ${(type as { type: string; }).type}`;
         }
     }

@@ -8,7 +8,7 @@ export default function processProperty(data: JSONOutput.DeclarationReflection) 
         return;
     }
     if (data.type && "name" in data.type && data.type.name === "default" && "id" in data.type && data.type.id !== undefined) {
-        data.type.name = getName(data.type.id);
+        data.type.name = getName((data.type as { id: number; }).id);
     }
     const prop: Property = {
         comment:  data.comment?.summary.reduce((a, b) => a + b.text, ""),

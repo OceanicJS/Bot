@@ -19,6 +19,10 @@ export interface IConfig {
     };
     cookieSecret: string;
     dataDir: string;
+    degenerateWebhook: {
+        id: string;
+        token: string;
+    };
     docsWebhook: {
         id: string;
         token: string;

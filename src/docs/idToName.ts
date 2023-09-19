@@ -7,6 +7,7 @@ export function getMap() {
 export function getName(id: number) {
     if (!nameMap.has(id)) {
         console.log(`Missing name for ${id}`);
+        console.debug(new TypeError(`Missing name for ${id}`).stack);
     }
     return nameMap.get(id) ?? `default[${id}]`;
 }

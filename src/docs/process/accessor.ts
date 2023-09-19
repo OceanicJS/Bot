@@ -7,7 +7,7 @@ export default function processAccessor(data: JSONOutput.DeclarationReflection) 
         return;
     }
     if (data.getSignature.type && "name" in data.getSignature.type && data.getSignature.type.name === "default" && "id" in data.getSignature.type && data.getSignature.type.id !== undefined) {
-        data.getSignature.type.name = getName(data.getSignature.type.id);
+        data.getSignature.type.name = getName((data.getSignature.type as { id: number; }).id);
     }
     return {
         comment: data.getSignature.comment?.summary.reduce((a, b) => a + b.text, ""),
