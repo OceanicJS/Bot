@@ -1,15 +1,9 @@
-import {
-    Config,
-    octo,
-    readCache,
-    truncate,
-    truncateWords,
-    writeCache
-} from "./util.js";
+import Cache from "./Cache.js";
+import { Config, octo, truncate, truncateWords } from "./util.js";
 import { type Client, DiscordHTTPError } from "oceanic.js";
 
 export default async function runGit(this: Client) {
-    const cache = await readCache();
+    const cache = await Cache.read();
     const commits = await octo.repos.listCommits({
         owner:    "discord",
         repo:     "discord-api-docs",
@@ -17,7 +11,10 @@ export default async function runGit(this: Client) {
     });
     const previous = cache.commit;
     cache.commit = commits.data[0].sha;
-    await writeCache(cache);
+    await Cache.write(c => {
+        c.commit = commits.data[0].sha;
+        return c;
+    });
     if (previous === null) {
         console.log("No cached commit, not logging anything");
     } else {
@@ -121,6 +118,8 @@ export default async function runGit(this: Client) {
             }
         }
     }
-    cache.pulls = [...temp.reverse(), ...cache.pulls];
-    await writeCache(cache);
+    await Cache.write(c => {
+        c.pulls = [...temp.reverse(), ...c.pulls];
+        return c;
+    });
 }

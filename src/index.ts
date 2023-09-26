@@ -1,4 +1,4 @@
-import { Config, isDocker } from "./util/util.js";
+import { Config, isDocker, setClient } from "./util/util.js";
 import { ActivityTypes, Client, type ClientEvents } from "oceanic.js";
 import StatusServer, { type AnyServer } from "@uwu-codes/status-server";
 import { mkdir, readdir } from "node:fs/promises";
@@ -16,6 +16,7 @@ const client = new Client({
         }
     }
 });
+setClient(client);
 
 process.on("unhandledRejection", (err, promise) => console.error("Unhandled Rejection:", err, promise))
     .on("uncaughtException", err => console.error("Uncaught Exception:", err))

@@ -1,15 +1,20 @@
+import Cache from "./Cache.js";
 import run from "../docs/run.js";
 import type { Root } from "../docs/types.js";
-import type { AutocompleteChoice, CreateGuildApplicationCommandOptions, User } from "oceanic.js";
+import type { AutocompleteChoice, Client, User } from "oceanic.js";
 import { fetch } from "undici";
 import type { JSONOutput } from "typedoc";
 import { gte } from "semver";
 import { parse } from "jsonc-parser";
 import { Octokit } from "@octokit/rest";
 import type { PathLike } from "node:fs";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { execSync } from "node:child_process";
 
+interface IConfigWebhook {
+    id: string;
+    token: string;
+}
 export interface IConfig {
     client: {
         id: string;
@@ -19,38 +24,15 @@ export interface IConfig {
     };
     cookieSecret: string;
     dataDir: string;
-    degenerateWebhook: {
-        id: string;
-        token: string;
-    };
-    docsWebhook: {
-        id: string;
-        token: string;
-    };
+    degenerateWebhook: IConfigWebhook;
+    docsWebhook: IConfigWebhook;
     encryptionKey: string;
     encryptionSalt: string;
     git: string;
     gitSecret: string;
     guild: string;
+    logWebhook: IConfigWebhook;
     skipGit: boolean;
-}
-
-export interface Cache {
-    commandIDs: Record<string, string>;
-    commands: Array<CreateGuildApplicationCommandOptions>;
-    commit: string | null;
-    connections: Record<string, { accessToken: string; commits: number; }>;
-    pulls: Array<[id: number, state: string]>;
-    snipes: Array<Snipe>;
-}
-
-interface Snipe {
-    author: Record<"id" | "tag" | "avatarURL", string>;
-    channel: string;
-    content: string;
-    oldContent: string | null;
-    timestamp: number;
-    type: "delete" | "edit";
 }
 
 export const isDocker = await access("/.dockerenv").then(() => true, () => false) || await readFile("/proc/1/cgroup", "utf8").then(contents => contents.includes("docker"));
@@ -77,12 +59,6 @@ export const truncate = (str: string, maxLen: number) => {
     }
     return `${str.slice(0, maxLen - 3)}...`;
 };
-export async function readCache() {
-    return (await exists(`${Config.dataDir}/cache.json`)) ? JSON.parse(await readFile(`${Config.dataDir}/cache.json`, "utf8")) as Cache : { commands: [], commandIDs: {}, commit: null, connections: {}, pulls: [], snipes: [] };
-}
-export async function writeCache(cache: Cache) {
-    await writeFile(`${Config.dataDir}/cache.json`, JSON.stringify(cache, null, 2));
-}
 
 
 export let defaultVersion: string;
@@ -269,22 +245,27 @@ export function truncateChoices(values: Array<AutocompleteChoice>) {
 
 
 export async function getSnipe(channel: string, type: "delete" | "edit") {
-    const cache = await readCache();
+    const cache = await Cache.read();
     const snipe = cache.snipes.sort((a,b) => b.timestamp - a.timestamp).find(sn => sn.channel === channel && sn.type === type);
     if (!snipe) {
         return null;
     }
-    cache.snipes.splice(cache.snipes.indexOf(snipe), 1);
-    await writeCache(cache);
+
+    await Cache.write(c => {
+        c.snipes.splice(c.snipes.indexOf(snipe), 1);
+        return c;
+    });
     return snipe;
 }
 
 export async function saveSnipe(author: User, channel: string, content: string, oldContent: string | null, type: "delete" | "edit") {
-    const cache = await readCache();
-    cache.snipes = cache.snipes.slice(0, 10);
-    const index = cache.snipes.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content, oldContent, timestamp: Date.now(), type });
-    await writeCache(cache);
-    return cache.snipes[index];
+    let cache = await Cache.read(), index: number;
+    await Cache.write(c => {
+        c.snipes = c.snipes.slice(0, 10);
+        index = c.snipes.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content, oldContent, timestamp: Date.now(), type });
+        return cache = c;
+    });
+    return cache.snipes[index!];
 }
 
 export const octo = new Octokit({
@@ -301,4 +282,13 @@ export async function getCommitCount(author: string, page = 1): Promise<number> 
     });
 
     return data.length === 100 ? 100 + await getCommitCount(author, page + 1) : data.length;
+}
+
+let client: Client;
+export function setClient(c: Client) {
+    client = c;
+}
+
+export function getClient() {
+    return client;
 }

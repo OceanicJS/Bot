@@ -1,5 +1,6 @@
-import { Config, getCommitCount, readCache, writeCache } from "./util/util.js";
+import { Config, getCommitCount } from "./util/util.js";
 import EncryptionHandler from "./util/EncryptionHandler.js";
+import Cache from "./util/Cache.js";
 import express from "express";
 import morgan from "morgan";
 import { Client, OAuthHelper, OAuthScopes } from "oceanic.js";
@@ -18,7 +19,8 @@ const hook = new Webhooks({
 
 hook.on("push", async ({ payload: data }) => {
     if (data.ref === "refs/heads/dev") {
-        const cache = await readCache();
+        const cache = await Cache.read();
+        const key = await Cache.lock();
         const counts: Record<string, number> = {};
         const users: Array<string> = [];
         for (const commit of data.commits) {
@@ -53,8 +55,9 @@ hook.on("push", async ({ payload: data }) => {
         }
 
         if (modified) {
-            await writeCache(cache);
+            await Cache.writeUnsafe(key, cache);
         }
+        await Cache.unlock(key);
     }
 });
 
@@ -110,12 +113,14 @@ const app = express()
                 platformName:     "Github",
                 platformUsername: name
             });
-            const cache = await readCache();
-            cache.connections[name.toLowerCase()] = {
-                accessToken: EncryptionHandler.encrypt(token.accessToken),
-                commits:     commitCount
-            };
-            await writeCache(cache);
+
+            await Cache.write(cache => {
+                cache.connections[name!.toLowerCase()] = {
+                    accessToken: EncryptionHandler.encrypt(token.accessToken),
+                    commits:     commitCount
+                };
+                return cache;
+            });
             return res.status(200).end(`Successfully linked via @${name}`);
         } else {
             return res.status(400).end("You have not contributed. Please make sure your github account is linked to your Discord account before attempting this.");

@@ -20,5 +20,9 @@
   "degenerateWebook": {
     "id": "webhook id for degenerate notifications",
     "token": "webhook token for degenerate notifications"
+  },
+  "logWebhook": {
+    "id": "webhook id for logs",
+    "token": "webhook token for logs"
   }
 }

@@ -1,5 +1,5 @@
+import Cache from "../util/Cache.js";
 import Command from "../util/Command.js";
-import { readCache } from "../util/util.js";
 import { ApplicationCommandTypes, type Client, type CommandInteraction, MessageFlags } from "oceanic.js";
 
 export default class CommandsCommand extends Command {
@@ -7,7 +7,7 @@ export default class CommandsCommand extends Command {
     override name = "commands";
     override type = ApplicationCommandTypes.CHAT_INPUT;
     override async run(this: Client, interaction: CommandInteraction) {
-        const cache = await readCache();
+        const cache = await Cache.read();
         return interaction.createMessage({
             embeds: [
                 {
