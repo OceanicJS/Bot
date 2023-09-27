@@ -29,7 +29,8 @@ export default class Commands {
 
     static async register(client: Client) {
         const commands = this.toJSON();
-        const cache = await Cache.read();
+        const key = await Cache.lock();
+        const cache = await Cache.read(key);
         if (JSON.stringify(commands) !== JSON.stringify(cache.commands)) {
             let ids: Record<string, string>;
             try {
@@ -39,12 +40,11 @@ export default class Commands {
                 console.log(commands.map((c, i) => `${i}: ${c.name}`).join("\n"));
                 throw err;
             }
-            await Cache.write(c => {
-                c.commands = commands;
-                c.commandIDs = ids;
-                return c;
-            });
+            cache.commands = commands;
+            cache.commandIDs = ids;
+            await Cache.write(cache, key);
         }
+        await Cache.unlock(key);
     }
 
     static toJSON() {

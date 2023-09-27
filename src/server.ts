@@ -19,8 +19,8 @@ const hook = new Webhooks({
 
 hook.on("push", async ({ payload: data }) => {
     if (data.ref === "refs/heads/dev") {
-        const cache = await Cache.read();
         const key = await Cache.lock();
+        const cache = await Cache.read(key);
         const counts: Record<string, number> = {};
         const users: Array<string> = [];
         for (const commit of data.commits) {
@@ -55,7 +55,7 @@ hook.on("push", async ({ payload: data }) => {
         }
 
         if (modified) {
-            await Cache.writeUnsafe(key, cache);
+            await Cache.write(cache, key);
         }
         await Cache.unlock(key);
     }
@@ -114,13 +114,14 @@ const app = express()
                 platformUsername: name
             });
 
-            await Cache.write(cache => {
-                cache.connections[name!.toLowerCase()] = {
-                    accessToken: EncryptionHandler.encrypt(token.accessToken),
-                    commits:     commitCount
-                };
-                return cache;
-            });
+            const key = await Cache.lock();
+            const cache = await Cache.read(key);
+            cache.connections[name.toLowerCase()] = {
+                accessToken: EncryptionHandler.encrypt(token.accessToken),
+                commits:     commitCount
+            };
+            await Cache.write(cache, key);
+            await Cache.unlock(key);
             return res.status(200).end(`Successfully linked via @${name}`);
         } else {
             return res.status(400).end("You have not contributed. Please make sure your github account is linked to your Discord account before attempting this.");
