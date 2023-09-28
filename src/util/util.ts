@@ -63,7 +63,7 @@ export const truncate = (str: string, maxLen: number) => {
 
 export let defaultVersion: string;
 export let versions: Array<string>;
-const minSupport = "1.0.0";
+const minSupport = "1.3.0";
 const minNewLayout = "1.8.0";
 export function refreshVersions() {
     defaultVersion = execSync("npm show oceanic.js version").toString().slice(0, -1);
