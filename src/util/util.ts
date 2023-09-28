@@ -64,6 +64,7 @@ export const truncate = (str: string, maxLen: number) => {
 export let defaultVersion: string;
 export let versions: Array<string>;
 const minSupport = "1.0.0";
+const minNewLayout = "1.8.0";
 export function refreshVersions() {
     defaultVersion = execSync("npm show oceanic.js version").toString().slice(0, -1);
     versions = (JSON.parse(execSync("npm show oceanic.js versions --json").toString()) as Array<string>).filter(v => !v.includes("-") && gte(v, minSupport));
@@ -95,7 +96,10 @@ export async function getVersion(version: string): Promise<Root | null> {
 }
 
 export function docsURL(version: string, type: "class" | "interface" | "enum" | "typeAlias", module: string, name: string, otherName?: string) {
-    let typeName: string;
+    let typeName: string, includeModule = true;
+    if (gte(version, minNewLayout)) {
+        includeModule = module === name;
+    }
     switch (type) {
         case "class": {
             typeName = "classes";
@@ -121,7 +125,7 @@ export function docsURL(version: string, type: "class" | "interface" | "enum" | 
             return `https://docs.oceanic.ws/v${version}#type=${type as string}&module=${module}&name=${name}&otherName=${otherName || "undefined"}`;
         }
     }
-    return `https://docs.oceanic.ws/v${version}/${typeName}/${module.replace(/\//g, "_")}.${name}.html${otherName ? `#${otherName}` : ""}`;
+    return `https://docs.oceanic.ws/v${version}/${typeName}/${includeModule ? `${module.replace(/\//g, "_")}.` : ""}${name}.html${otherName ? `#${otherName}` : ""}`;
 }
 
 export async function find(version: string, name: string) {
