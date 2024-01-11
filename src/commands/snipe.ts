@@ -1,6 +1,7 @@
 import Command from "../util/Command.js";
 import { filter, getSnipe } from "../util/util.js";
 import EncryptionHandler from "../util/EncryptionHandler.js";
+import { type Snipe } from "../util/Cache.js";
 import {
     ApplicationCommandOptionTypes,
     ApplicationCommandTypes,
@@ -17,7 +18,16 @@ export default class SnipeCommand extends Command {
     override type = ApplicationCommandTypes.CHAT_INPUT;
     override async run(this: Client, interaction: CommandInteraction) {
         const channel = interaction.data.options.getChannelOption("channel")?.value || interaction.channelID;
-        const snipe = await getSnipe(channel, "delete");
+        let snipe: Snipe | null;
+        try {
+            snipe = await getSnipe(channel, "delete");
+        } catch (e) {
+            const err = e as Error;
+            return interaction.createMessage({
+                content: `Failed to fetch snipe: **${err.name}: ${err.message}**`,
+                flags:   MessageFlags.EPHEMERAL
+            });
+        }
         if (!snipe) {
             return interaction.createMessage({
                 content: "No snipes found.",

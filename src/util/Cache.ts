@@ -14,7 +14,7 @@ export interface ICache {
     snipes: Array<Snipe>;
 }
 
-interface Snipe {
+export interface Snipe {
     author: Record<"id" | "tag" | "avatarURL", string>;
     channel: string;
     content: string;

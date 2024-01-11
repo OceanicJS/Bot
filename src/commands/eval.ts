@@ -21,7 +21,7 @@ export default class EvalCommand extends Command {
                     {
                         title:       "Eval Result",
                         // eslint-disable-next-line no-eval, @typescript-eslint/restrict-template-expressions
-                        description: `\`\`\`js\n${eval(interaction.data.options.getString("code", true))}\`\`\``
+                        description: `\`\`\`js\n${await eval(interaction.data.options.getString("code", true))}\`\`\``
                     }
                 ]
             });
