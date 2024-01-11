@@ -98,7 +98,7 @@ export async function getVersion(version: string): Promise<Root | null> {
 export function docsURL(version: string, type: "class" | "interface" | "enum" | "typeAlias", module: string, name: string, otherName?: string) {
     let typeName: string, includeModule = true;
     if (gte(version, minNewLayout)) {
-        includeModule = module === name;
+        includeModule = module !== name;
     }
     switch (type) {
         case "class": {
