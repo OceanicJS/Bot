@@ -41,6 +41,7 @@ function stringifyArguments(interaction: CommandInteraction | AutocompleteIntera
 
 export default async function interactionCreateEvent(this: Client, interaction: AnyInteractionGateway) {
     if (interaction.type === InteractionTypes.APPLICATION_COMMAND) {
+        await interaction.defer();
         Logger.getLogger(`command/${interaction.data.name}`).info(`${interaction.user.tag} (user: ${interaction.user.id}, args: ${stringifyArguments(interaction) ?? "none"})`);
         await Commands.handle(this, interaction);
     }

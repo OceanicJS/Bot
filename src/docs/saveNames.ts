@@ -5,8 +5,10 @@ export default function saveNames(project: JSONOutput.ProjectReflection) {
     if (project.children) {
         for (const child of project.children) {
             if (![ReflectionKind.Module, ReflectionKind.Class, ReflectionKind.Interface].includes(child.kind)) {
-                throw new Error(`Expected ${ReflectionKind[ReflectionKind.Module]} (${ReflectionKind.Module}), got ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
+                console.error(`Expected ${ReflectionKind[ReflectionKind.Module]} (${ReflectionKind.Module}), got ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
+                continue;
             }
+
             setName(child.id, child.name);
             if (!child.children) {
                 continue;
