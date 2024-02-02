@@ -16,7 +16,7 @@ import {
 } from "oceanic.js";
 import FuzzySearch from "fuzzy-search";
 
-export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "class_property" | "interface_property" | "method" | "interface" | "type"}` | `no_${"events" | "properties_class" | "properties_interface" | "methods"}` | "loading", interaction: CommandInteraction | AutocompleteInteraction, ver: string, autocomplete: boolean, primaryName: string | null, secondaryName: string | null): void {
+export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "class_property" | "interface_property" | "method" | "interface" | "type"}` | `no_${"events" | "properties_class" | "properties_interface" | "methods"}` | "loading", interaction: CommandInteraction | AutocompleteInteraction, ver: string, _autocomplete: boolean, primaryName: string | null, secondaryName: string | null): void {
     switch (json) {
         case "invalid": {
             return void (interaction instanceof AutocompleteInteraction ? interaction.result([{

@@ -1,6 +1,8 @@
 import convertType from "../convertType.js";
 import type { Method, Overload } from "../types.js";
 import { getName } from "../idToName.js";
+import GenerationLogs from "../../util/GenerationLogs.js";
+import { formatReflection } from "../../util/util.js";
 import { type JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processMethod(data: JSONOutput.DeclarationReflection) {
@@ -51,6 +53,8 @@ export default function processMethod(data: JSONOutput.DeclarationReflection) {
 
             method.overloads.push(overload);
         }
+    } else {
+        GenerationLogs.addCurrent(`Unexpected zero signatures for reflection ${formatReflection(data)}`);
     }
 
     return method;

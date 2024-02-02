@@ -65,7 +65,7 @@ hook.on("push", async ({ payload: data }) => {
 const app = express()
     .use(morgan("dev"))
     .use(cookieParser(Config.cookieSecret))
-    .get("/", async(req, res) => {
+    .get("/", async(_req, res) => {
         const state = randomBytes(32).toString("hex");
         res.cookie("oceanic-satate", state, { maxAge: 1000 * 60 * 5, signed: true });
         return res.redirect(OAuthHelper.constructURL({

@@ -12,7 +12,7 @@ export default class CheckGitCommand extends Command {
             await runGit.call(this);
             await interaction.reply({ content: "Done" });
         } else {
-            return interaction.reply({ content: "Sike" });
+            await interaction.reply({ content: "Sike" });
         }
     }
 }

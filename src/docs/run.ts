@@ -8,7 +8,8 @@ import processTypeAlias from "./process/typeAlias.js";
 import processVariable from "./process/variable.js";
 import processFunction from "./process/function.js";
 import processReference from "./process/reference.js";
-import { Config } from "../util/util.js";
+import { Config, formatReflection } from "../util/util.js";
+import GenerationLogs from "../util/GenerationLogs.js";
 import { type JSONOutput, ReflectionKind } from "typedoc";
 import { writeFile } from "node:fs/promises";
 
@@ -50,7 +51,7 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
                     }
 
                     default: {
-                        throw new Error(`Unexpected kind ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
+                        GenerationLogs.addCurrent(`Unexpected reflection kind ${formatReflection(child)}`, true);
                     }
                 }
                 continue;
@@ -106,7 +107,7 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
 
                     case ReflectionKind.Reference: {
                         if (child2.variant !== "reference") {
-                            console.debug(`Skipping ${child2.variant} ${ReflectionKind[child2.kind]} (${child2.kind}) for ${child2.name} (${child2.id})`);
+                            GenerationLogs.addCurrent(`Skipping non-reference (${child.variant}) reflection ${formatReflection(child2)}`);
                             continue;
                         }
                         const ref = processReference(child2 as JSONOutput.ReferenceReflection);
@@ -117,12 +118,12 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
 
                     // I can't be bothered to handle this right now
                     case ReflectionKind.Namespace: {
-                        console.debug(`Skipping namespace ${child2.name} (${child2.id})`);
+                        GenerationLogs.addCurrent(`Skipping ${formatReflection(child2)}`);
                         break;
                     }
 
                     default: {
-                        throw new Error(`Unexpected kind ${ReflectionKind[child2.kind]} (${child2.kind}) for ${child2.name} (${child2.id})`);
+                        GenerationLogs.addCurrent(`Unexpected reflection kind ${formatReflection(child2)}`, true);
                     }
                 }
             }
@@ -136,7 +137,7 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
 
         const clazz = root.classes.find(claz => claz.name === iface.name.slice(0, -6));
         if (!clazz) {
-            console.debug(`No class found for assumed events interface ${iface.name}`);
+            GenerationLogs.addCurrent(`No class found for assumed events interface ${iface.name}`);
             continue;
         }
 
@@ -149,16 +150,16 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
                     typeParameters: []
                 });
             } else {
-                const p = (property.text.replace(/\s/g, "").replace(/\[]/g, "%ARRAY%").match(/\[.*?]/g) ?? []).map(m => m.replace(/%ARRAY%/g, "[]"));
+                const p = (property.text.replaceAll(/\s/g, "").replaceAll("[]", "%ARRAY%").match(/\[.*?]/g) ?? []).map(m => m.replaceAll("%ARRAY%", "[]"));
                 for (const sig of p) {
                     const parameters: Array<Parameter> = [];
-                    const pr = sig.slice(1, -1).replace(/(<.*?(?:,.*?)+>)/g, (_m, p1: string) => p1.replace(/,/g, "%COMMA%")).replace(/(<.*?(?:\|.*?)+>)/g, (_m, p1: string) => p1.replace(/\|/g, "%PIPE%")).split(",");
+                    const pr = sig.slice(1, -1).replaceAll(/(<.*?(?:,.*?)+>)/g, (_m, p1: string) => p1.replaceAll(",", "%COMMA%")).replaceAll(/(<.*?(?:\|.*?)+>)/g, (_m, p1: string) => p1.replaceAll("|", "%PIPE%")).split(",");
                     for (const param of pr) {
                         const [name, type] = param.split(":");
                         parameters.push({
                             name:     name.endsWith("?") ? name.slice(0, -1) : name,
                             optional: name.endsWith("?"),
-                            text:     type.split("|").join(" | ").replace(/%COMMA%/g, ", ").replace(/%PIPE%/g, " | ")
+                            text:     type.split("|").join(" | ").replaceAll("%COMMA%", ", ").replaceAll("%PIPE%", " | ")
                         });
                     }
 
@@ -180,5 +181,3 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
 
     await writeFile(`${Config.dataDir}/docs/${version}.json`, JSON.stringify(root));
 }
-
-// await run(JSON.parse(await readFile("/home/donovan/Downloads/v1.3.0.json", "utf8")) as JSONOutput.ProjectReflection, "1.2.1");

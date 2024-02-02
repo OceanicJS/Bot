@@ -1,4 +1,5 @@
 import { getName } from "./idToName.js";
+import GenerationLogs from "../util/GenerationLogs.js";
 import type { JSONOutput } from "typedoc";
 function resolveArrayType(type: JSONOutput.ArrayType, level = 1): { level: number; type: string; } {
     return type.elementType.type === "array" ? resolveArrayType(type.elementType, level++) : { type: convertType(type.elementType), level };
@@ -78,7 +79,7 @@ export default function convertType(type: JSONOutput.SomeType): string {
 
         case "reference": {
             if ("name" in type && type.name === "default" && "target" in type && type.target !== undefined) {
-                type.name = typeof type.target === "object" ? (type.target as { qualifiedName: string; }).qualifiedName : getName(type.target! as number);
+                type.name = typeof type.target === "object" ? (type.target as { qualifiedName: string; }).qualifiedName : getName(type.target);
             }
             const { name, typeArguments } = type;
             return `${name}${typeArguments ? `<${typeArguments.map(convertType).join(", ")}>` : ""}`;
@@ -136,7 +137,7 @@ export default function convertType(type: JSONOutput.SomeType): string {
         }
 
         default: {
-            console.log(`TODO Type: ${(type as { type: string; }).type}`);
+            GenerationLogs.addCurrent(`TODO Type: ${(type as { type: string; }).type} (${JSON.stringify(type)})`);
             return `TODO: ${(type as { type: string; }).type}`;
         }
     }

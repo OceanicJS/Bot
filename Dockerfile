@@ -8,4 +8,4 @@ RUN npx pnpm install  --frozen-lockfile
 COPY . .
 RUN npx pnpm build
 RUN npx pnpm prune --prod
-CMD ["node", "--no-warnings", "--no-deprecation", "--experimental-specifier-resolution=node", "dist/index.js"]
+CMD ["node", "--no-warnings", "--no-deprecation", "--experimental-specifier-resolution=node", "--enable-source-maps", "dist/index.js"]

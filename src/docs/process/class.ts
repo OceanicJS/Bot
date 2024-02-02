@@ -4,6 +4,8 @@ import processAccessor from "./accessor.js";
 import processMethod from "./method.js";
 import type { Class } from "../types.js";
 import convertType from "../convertType.js";
+import GenerationLogs from "../../util/GenerationLogs.js";
+import { formatReflection } from "../../util/util.js";
 import { type JSONOutput, ReflectionKind } from "typedoc";
 
 export default function processClass(data: JSONOutput.DeclarationReflection, module: string) {
@@ -65,6 +67,10 @@ export default function processClass(data: JSONOutput.DeclarationReflection, mod
                         clazz.methods.push(method);
                     }
                     break;
+                }
+
+                default: {
+                    GenerationLogs.addCurrent(`Unexpected reflection kind ${formatReflection(child)} when processing ${formatReflection(data)}`);
                 }
             }
         }

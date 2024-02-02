@@ -1,15 +1,17 @@
 import Cache from "./Cache.js";
+import GenerationQueue from "./GenerationQueue.js";
+import GenerationLogs from "./GenerationLogs.js";
 import run from "../docs/run.js";
 import type { Root } from "../docs/types.js";
-import type { AutocompleteChoice, Client, User } from "oceanic.js";
-import { fetch } from "undici";
-import type { JSONOutput } from "typedoc";
+import type { AutocompleteChoice, Client, ExecuteWebhookOptions, User } from "oceanic.js";
+import { ReflectionKind, type JSONOutput } from "typedoc";
 import { gte } from "semver";
 import { parse } from "jsonc-parser";
 import { Octokit } from "@octokit/rest";
 import type { PathLike } from "node:fs";
 import { access, readFile } from "node:fs/promises";
 import { execSync } from "node:child_process";
+import { format } from "node:util";
 
 interface IConfigWebhook {
     id: string;
@@ -38,7 +40,7 @@ export interface IConfig {
 export const isDocker = await access("/.dockerenv").then(() => true, () => false) || await readFile("/proc/1/cgroup", "utf8").then(contents => contents.includes("docker"));
 export const Config = parse(await readFile(new URL("../../config.jsonc", import.meta.url), "utf8")) as IConfig;
 
-export const filter = (str: string) => str.replace(/\[/g, "\\[").replace(/]/g, "\\]");
+export const filter = (str: string) => str.replaceAll("[", "\\[").replaceAll("]", "\\]");
 export const exists = (path: PathLike) => access(path).then(() => true, () => false);
 export const truncateWords = (str: string, maxLen: number) => {
     if (str.length <= maxLen) {
@@ -77,10 +79,21 @@ export async function checkVersion(version: string): Promise<boolean> {
     if (await exists(`${Config.dataDir}/docs/${version}.json`)) {
         return true;
     } else {
-        void getVersion(version);
+        if (!GenerationQueue.has(version)) {
+            GenerationQueue.add(version, async() => {
+                await getVersion(version)
+                    .then(
+                        () => GenerationLogs.save(version),
+                        (err: Error) => discordLog({
+                            content: `Generation for **${version}** failed.\n\n\`\`\`\n${format(err)}\`\`\``
+                        })
+                    );
+            });
+        }
         return false;
     }
 }
+
 export async function getVersion(version: string): Promise<Root | null> {
     if (!versions.includes(version)) {
         return null;
@@ -125,7 +138,7 @@ export function docsURL(version: string, type: "class" | "interface" | "enum" | 
             return `https://docs.oceanic.ws/v${version}#type=${type as string}&module=${module}&name=${name}&otherName=${otherName || "undefined"}`;
         }
     }
-    return `https://docs.oceanic.ws/v${version}/${typeName}/${includeModule ? `${module.replace(/\//g, "_")}.` : ""}${name}.html${otherName ? `#${otherName}` : ""}`;
+    return `https://docs.oceanic.ws/v${version}/${typeName}/${includeModule ? `${module.replaceAll("/", "_")}.` : ""}${name}.html${otherName ? `#${otherName}` : ""}`;
 }
 
 export async function find(version: string, name: string) {
@@ -208,32 +221,32 @@ export async function linkType(version: string, text: string) {
     for (const match of classMatches) {
         const clazz = root.classes.find(c => c.name === match);
         if (clazz) {
-            text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "class", clazz.module, clazz.name)})`);
+            text = text.replaceAll(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "class", clazz.module, clazz.name)})`);
         }
     }
     for (const match of enumMatches) {
         const enm = root.enums.find(c => c.name === match);
         if (enm) {
-            text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "enum", enm.module, enm.name)})`);
+            text = text.replaceAll(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "enum", enm.module, enm.name)})`);
         }
     }
     for (const match of interfaceMatches) {
         const iface = root.interfaces.find(c => c.name === match);
         if (iface) {
-            text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "interface", iface.module, iface.name)})`);
+            text = text.replaceAll(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "interface", iface.module, iface.name)})`);
         }
     }
     for (const match of typeAliasMatches) {
         const typeAlias = root.typeAliases.find(c => c.name === match);
         if (typeAlias) {
-            text = text.replace(new RegExp(`\\b(${match})\\b`, "gi"), `[${match}](${docsURL(version, "typeAlias", typeAlias.module, typeAlias.name)})`);
+            text = text.replaceAll(new RegExp(`\\b(${match})\\b`, "gi"), `[${match}](${docsURL(version, "typeAlias", typeAlias.module, typeAlias.name)})`);
         }
     }
     for (const match of intrinsicMatches) {
-        text = text.replace(new RegExp(`\\b(${match})\\b`, "g"), intrinsic[match as keyof typeof intrinsic]);
+        text = text.replaceAll(new RegExp(`\\b(${match})\\b`, "g"), intrinsic[match as keyof typeof intrinsic]);
     }
 
-    return text.replace(/(<|>)/g, "\\$1");
+    return text.replaceAll(/(<|>)/g, "\\$1");
 }
 
 
@@ -295,4 +308,15 @@ export function setClient(c: Client) {
 
 export function getClient() {
     return client;
+}
+
+export function formatReflection(ref: JSONOutput.DeclarationReflection | ReflectionKind) {
+    if (typeof ref === "number") {
+        return `${ReflectionKind[ref]} (${ref})`;
+    }
+    return `${ReflectionKind[ref.kind]} (${ref.kind}) for ${ref.name} (${ref.id})`;
+}
+
+export function discordLog(options: Omit<ExecuteWebhookOptions, "wait">) {
+    return getClient().rest.webhooks.execute(Config.logWebhook.id, Config.logWebhook.token, { ...options, wait: true });
 }

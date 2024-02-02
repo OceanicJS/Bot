@@ -1,11 +1,13 @@
 import { getMap, setName } from "./idToName.js";
+import GenerationLogs from "../util/GenerationLogs.js";
+import { formatReflection } from "../util/util.js";
 import { type JSONOutput, ReflectionKind } from "typedoc";
 
 export default function saveNames(project: JSONOutput.ProjectReflection) {
     if (project.children) {
         for (const child of project.children) {
             if (![ReflectionKind.Module, ReflectionKind.Class, ReflectionKind.Interface].includes(child.kind)) {
-                console.error(`Unexpected reflection type at root: ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
+                GenerationLogs.addCurrent(`Unexpected reflection type at root: ${formatReflection(child)}`, true);
                 continue;
             }
 
@@ -27,7 +29,7 @@ export default function saveNames(project: JSONOutput.ProjectReflection) {
                     }
 
                     default: {
-                        console.warn(`Unexpected child type ${ReflectionKind[child2.kind]} (${child2.kind}) for ${child2.name} (${child2.id}) on root ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
+                        // GenerationLogs.addCurrent(`Unexpected reflection ${formatReflection(child2)} on ${formatReflection(child)}`, true);
                     }
                 }
             }
