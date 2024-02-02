@@ -41,6 +41,14 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
                         break;
                     }
 
+                    case ReflectionKind.TypeAlias: {
+                        const typeAlias = processTypeAlias(child, child.name);
+                        if (typeAlias) {
+                            root.typeAliases.push(typeAlias);
+                        }
+                        break;
+                    }
+
                     default: {
                         throw new Error(`Unexpected kind ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
                     }
@@ -144,7 +152,7 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
                 const p = (property.text.replace(/\s/g, "").replace(/\[]/g, "%ARRAY%").match(/\[.*?]/g) ?? []).map(m => m.replace(/%ARRAY%/g, "[]"));
                 for (const sig of p) {
                     const parameters: Array<Parameter> = [];
-                    const pr = sig.slice(1, -1).replace(/(<.*?(?:,.*?)+>)/g, (m, p1: string) => p1.replace(/,/g, "%COMMA%")).replace(/(<.*?(?:\|.*?)+>)/g, (m, p1: string) => p1.replace(/\|/g, "%PIPE%")).split(",");
+                    const pr = sig.slice(1, -1).replace(/(<.*?(?:,.*?)+>)/g, (_m, p1: string) => p1.replace(/,/g, "%COMMA%")).replace(/(<.*?(?:\|.*?)+>)/g, (_m, p1: string) => p1.replace(/\|/g, "%PIPE%")).split(",");
                     for (const param of pr) {
                         const [name, type] = param.split(":");
                         parameters.push({

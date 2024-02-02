@@ -8,7 +8,7 @@ export default class CommandsCommand extends Command {
     override type = ApplicationCommandTypes.CHAT_INPUT;
     override async run(this: Client, interaction: CommandInteraction) {
         const cache = await Cache.read();
-        return interaction.createMessage({
+        return interaction.reply({
             embeds: [
                 {
                     title:       "Commands",

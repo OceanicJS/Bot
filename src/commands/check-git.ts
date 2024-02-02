@@ -10,9 +10,9 @@ export default class CheckGitCommand extends Command {
         if (interaction.user.id === "242843345402069002") {
             await interaction.defer(MessageFlags.EPHEMERAL);
             await runGit.call(this);
-            await interaction.createFollowup({ content: "Done" });
+            await interaction.reply({ content: "Done" });
         } else {
-            return interaction.createMessage({ content: "Sike" });
+            return interaction.reply({ content: "Sike" });
         }
     }
 }

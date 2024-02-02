@@ -78,7 +78,7 @@ export default function convertType(type: JSONOutput.SomeType): string {
 
         case "reference": {
             if ("name" in type && type.name === "default" && "target" in type && type.target !== undefined) {
-                type.name = typeof type.target === "object" ? type.target.qualifiedName : getName(type.target);
+                type.name = typeof type.target === "object" ? (type.target as { qualifiedName: string; }).qualifiedName : getName(type.target! as number);
             }
             const { name, typeArguments } = type;
             return `${name}${typeArguments ? `<${typeArguments.map(convertType).join(", ")}>` : ""}`;

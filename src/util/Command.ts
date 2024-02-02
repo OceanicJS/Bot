@@ -15,7 +15,7 @@ export default abstract class Command {
     abstract description: string;
     abstract name: string;
     abstract type: ApplicationCommandTypes;
-    abstract run(this: Client, interaction: CommandInteraction): Promise<void> | void;
+    abstract run(this: Client, interaction: CommandInteraction): Promise<unknown>;
     setOptions?(command: ApplicationCommandBuilder): void;
 
     toJSON() {
@@ -41,7 +41,7 @@ export class EmptyCommand extends Command {
     description = "This command is empty.";
     name = "empty";
     type = ApplicationCommandTypes.CHAT_INPUT;
-    run() {
+    async run() {
         throw new Error("This command is empty.");
     }
 }

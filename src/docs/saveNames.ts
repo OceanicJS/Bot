@@ -5,7 +5,7 @@ export default function saveNames(project: JSONOutput.ProjectReflection) {
     if (project.children) {
         for (const child of project.children) {
             if (![ReflectionKind.Module, ReflectionKind.Class, ReflectionKind.Interface].includes(child.kind)) {
-                console.error(`Expected ${ReflectionKind[ReflectionKind.Module]} (${ReflectionKind.Module}), got ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
+                console.error(`Unexpected reflection type at root: ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
                 continue;
             }
 
@@ -23,6 +23,11 @@ export default function saveNames(project: JSONOutput.ProjectReflection) {
                     case ReflectionKind.Variable:
                     case ReflectionKind.Reference: {
                         setName(child2.id, child2.name);
+                        break;
+                    }
+
+                    default: {
+                        console.warn(`Unexpected child type ${ReflectionKind[child2.kind]} (${child2.kind}) for ${child2.name} (${child2.id}) on root ${ReflectionKind[child.kind]} (${child.kind}) for ${child.name} (${child.id})`);
                     }
                 }
             }

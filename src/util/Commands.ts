@@ -14,7 +14,7 @@ export default class Commands {
 
     static async handle(client: Client, interaction: CommandInteraction) {
         const command = this.commandMap.get(interaction.data.name);
-        await (command ? command.run.call(client, interaction) : interaction.createMessage({ content: "I couldn't figure out how to execute that command.", flags: MessageFlags.EPHEMERAL }));
+        await (command ? command.run.call(client, interaction) : interaction.reply({ content: "I couldn't figure out how to execute that command.", flags: MessageFlags.EPHEMERAL }));
     }
     static async load() {
         const files = await readdir(commandDir, { withFileTypes: true });

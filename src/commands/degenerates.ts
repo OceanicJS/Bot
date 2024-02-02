@@ -17,7 +17,7 @@ export default class DegeneratesCommand extends Command {
     override type = ApplicationCommandTypes.CHAT_INPUT;
     override async run(this: Client, interaction: CommandInteraction) {
         if (!interaction.member!.roles.includes(superRole)) {
-            return interaction.createMessage({ content: "You do not have permission to use this command.", flags: MessageFlags.EPHEMERAL });
+            return interaction.reply({ content: "You do not have permission to use this command.", flags: MessageFlags.EPHEMERAL });
         }
         const user = interaction.data.options.getMember("user", true);
         const [action] = interaction.data.options.getSubCommand<["add" | "remove"]>(true);
@@ -32,7 +32,7 @@ export default class DegeneratesCommand extends Command {
     // eslint-disable-next-line @typescript-eslint/member-ordering
     async add(this: Client, interaction: CommandInteraction, user: Member) {
         if (user.roles.includes(role)) {
-            return interaction.createMessage({ content: "This user is already a degenerate.", flags: MessageFlags.EPHEMERAL });
+            return interaction.reply({ content: "This user is already a degenerate.", flags: MessageFlags.EPHEMERAL });
         }
 
         await user.addRole(role, "Added by a degenerate");
@@ -42,17 +42,17 @@ export default class DegeneratesCommand extends Command {
             content:   `${user.mention} has been dragged into degeneracy.`,
             flags:     MessageFlags.SUPPRESS_NOTIFICATIONS
         });
-        return interaction.createMessage({ content: "Successfully added the user.", flags: MessageFlags.EPHEMERAL });
+        return interaction.reply({ content: "Successfully added the user.", flags: MessageFlags.EPHEMERAL });
     }
 
     // eslint-disable-next-line @typescript-eslint/member-ordering
     async remove(this: Client, interaction: CommandInteraction, user: Member) {
         if (!user.roles.includes(role)) {
-            return interaction.createMessage({ content: "This user is not a degenerate.", flags: MessageFlags.EPHEMERAL });
+            return interaction.reply({ content: "This user is not a degenerate.", flags: MessageFlags.EPHEMERAL });
         }
 
         if (user.roles.includes(superRole)) {
-            return interaction.createMessage({ content: "You cannot remove a super degenerate.", flags: MessageFlags.EPHEMERAL });
+            return interaction.reply({ content: "You cannot remove a super degenerate.", flags: MessageFlags.EPHEMERAL });
         }
 
         await user.removeRole(role, "Removed by a degenerate");
@@ -62,7 +62,7 @@ export default class DegeneratesCommand extends Command {
             content:   `${user.mention} has been removed from degeneracy.`,
             flags:     MessageFlags.SUPPRESS_NOTIFICATIONS
         });
-        return interaction.createMessage({ content: "Successfully removed the user.", flags: MessageFlags.EPHEMERAL });
+        return interaction.reply({ content: "Successfully removed the user.", flags: MessageFlags.EPHEMERAL });
     }
 
     override setOptions(command: ApplicationCommandBuilder) {

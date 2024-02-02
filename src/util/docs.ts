@@ -22,7 +22,7 @@ export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "cl
             return void (interaction instanceof AutocompleteInteraction ? interaction.result([{
                 name:  `Invalid Version "${ver}"`,
                 value: "version_invalid"
-            }]) : interaction.createMessage({
+            }]) : interaction.reply({
                 content: `Invalid Version "${ver}"`,
                 flags:   MessageFlags.EPHEMERAL
             }));
@@ -32,35 +32,35 @@ export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "cl
             return void (interaction instanceof AutocompleteInteraction ? interaction.result([{
                 name:  `Invalid class "${primaryName!}"`,
                 value: "class_invalid"
-            }]) : interaction.createMessage({
+            }]) : interaction.reply({
                 content: `The class "${primaryName!}" is invalid.`,
                 flags:   MessageFlags.EPHEMERAL
             }));
         }
         case "invalid_event": {
             console.debug("[%s] Invalid Event (%s#event:%s), raw: %s", new Date().toISOString(), primaryName || "Unknown", secondaryName || "Unknown", JSON.stringify(interaction.data));
-            return void (interaction as CommandInteraction).createMessage({
+            return void (interaction as CommandInteraction).reply({
                 content: `The event "${primaryName || "Unknown"}#event:${secondaryName || "Unknown"}" is invalid.`,
                 flags:   MessageFlags.EPHEMERAL
             });
         }
         case "invalid_class_property": {
             console.debug("[%s] Invalid Class Property (%s#%s), raw: %s", new Date().toISOString(), primaryName || "Unknown", secondaryName || "Unknown", JSON.stringify(interaction.data));
-            return void (interaction as CommandInteraction).createMessage({
+            return void (interaction as CommandInteraction).reply({
                 content: `The property "${primaryName || "Unknown"}#${secondaryName || "Unknown"}" is invalid."`,
                 flags:   MessageFlags.EPHEMERAL
             });
         }
         case "invalid_interface_property": {
             console.debug("[%s] Invalid Interface Property (%s#%s), raw: %s", new Date().toISOString(), primaryName || "Unknown", secondaryName || "Unknown", JSON.stringify(interaction.data));
-            return void (interaction as CommandInteraction).createMessage({
+            return void (interaction as CommandInteraction).reply({
                 content: `The property "${primaryName || "Unknown"}#${secondaryName || "Unknown"}" is invalid."`,
                 flags:   MessageFlags.EPHEMERAL
             });
         }
         case "invalid_method": {
             console.debug("[%s] Invalid Method (%s#%s()), raw: %s", new Date().toISOString(), primaryName || "Unknown", secondaryName || "Unknown", JSON.stringify(interaction.data));
-            return void (interaction as CommandInteraction).createMessage({
+            return void (interaction as CommandInteraction).reply({
                 content: `The method "${primaryName || "Unknown"}#${secondaryName || "Unknown"}()" is invalid.`,
                 flags:   MessageFlags.EPHEMERAL
             });
@@ -70,7 +70,7 @@ export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "cl
             return void (interaction instanceof AutocompleteInteraction ? interaction.result([{
                 name:  `Invalid interface "${primaryName!}"`,
                 value: "interface_invalid"
-            }]) : interaction.createMessage({
+            }]) : interaction.reply({
                 content: `The interface "${primaryName!}" is invalid.`,
                 flags:   MessageFlags.EPHEMERAL
             }));
@@ -80,7 +80,7 @@ export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "cl
             return void (interaction instanceof AutocompleteInteraction ? interaction.result([{
                 name:  `Invalid type "${primaryName!}"`,
                 value: "type_invalid"
-            }]) : interaction.createMessage({
+            }]) : interaction.reply({
                 content: `The type "${primaryName!}" is invalid.`,
                 flags:   MessageFlags.EPHEMERAL
             }));
@@ -89,7 +89,7 @@ export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "cl
             return void (interaction instanceof AutocompleteInteraction ? interaction.result([{
                 name:  `The class "${primaryName!}" has no events.`,
                 value: "no_events"
-            }]) : interaction.createMessage({
+            }]) : interaction.reply({
                 content: `The class "${primaryName!}" has no events.`,
                 flags:   MessageFlags.EPHEMERAL
             }));
@@ -98,7 +98,7 @@ export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "cl
             return void (interaction instanceof AutocompleteInteraction ? interaction.result([{
                 name:  `The class "${primaryName!}" has no properties.`,
                 value: "no_events"
-            }]) : interaction.createMessage({
+            }]) : interaction.reply({
                 content: `The class "${primaryName!}" has no properties.`,
                 flags:   MessageFlags.EPHEMERAL
             }));
@@ -107,7 +107,7 @@ export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "cl
             return void (interaction instanceof AutocompleteInteraction ? interaction.result([{
                 name:  `The interface "${primaryName!}" has no properties.`,
                 value: "no_events"
-            }]) : interaction.createMessage({
+            }]) : interaction.reply({
                 content: `The interface "${primaryName!}" has no properties.`,
                 flags:   MessageFlags.EPHEMERAL
             }));
@@ -116,7 +116,7 @@ export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "cl
             return void (interaction instanceof AutocompleteInteraction ? interaction.result([{
                 name:  `The class "${primaryName!}" has no methods.`,
                 value: "no_events"
-            }]) : interaction.createMessage({
+            }]) : interaction.reply({
                 content: `The class "${primaryName!}" has no methods.`,
                 flags:   MessageFlags.EPHEMERAL
             }));
@@ -125,7 +125,7 @@ export function handleIssue(json: "invalid" | `invalid_${"class" | "event" | "cl
             return void (interaction instanceof AutocompleteInteraction ? interaction.result([{
                 name:  `Version "${ver}" is still loading, please be patient.`,
                 value: "loading"
-            }]) : interaction.createMessage({
+            }]) : interaction.reply({
                 content: `Version "${ver}" is still loading, please be patient.`,
                 flags:   MessageFlags.EPHEMERAL
             }));
@@ -227,7 +227,7 @@ export async function classRunner(this: Client, interaction: CommandInteraction,
         });
     }
 
-    return interaction.createMessage({
+    return interaction.reply({
         embeds: [
             {
                 url:         docsURL(version, "class", clazz.module, className),
@@ -255,7 +255,7 @@ export async function eventRunner(this: Client, interaction: CommandInteraction,
         return void handleIssue("invalid_event", interaction, version, false, className, eventName);
     }
 
-    return interaction.createMessage({
+    return interaction.reply({
         embeds: [
             {
                 title:       `${className}.on("${event.name}") @ ${version}`,
@@ -292,7 +292,7 @@ export async function classPropertyRunner(this: Client, interaction: CommandInte
         return void handleIssue("invalid_class_property", interaction, version, false, className, propertyName);
     }
 
-    return interaction.createMessage({
+    return interaction.reply({
         embeds: [
             {
                 title:       `${className} -> ${property.name} @ ${version}`,
@@ -329,7 +329,7 @@ export async function interfacePropertyRunner(this: Client, interaction: Command
         return void handleIssue("invalid_interface_property", interaction, version, false, interfaceName, propertyName);
     }
 
-    return interaction.createMessage({
+    return interaction.reply({
         embeds: [
             {
                 title:       `${interfaceName} -> ${property.name} @ ${version}`,
@@ -366,7 +366,7 @@ export async function methodRunner(this: Client, interaction: CommandInteraction
         return void handleIssue("invalid_method", interaction, version, false, className, eventName);
     }
 
-    return interaction.createMessage({
+    return interaction.reply({
         embeds: [
             {
                 title:       `${className}#${method.name}() @ ${version}`,
@@ -444,7 +444,7 @@ export async function typeRunner(this: Client, interaction: CommandInteraction, 
 
     const use = (type ?? iface)!;
 
-    return interaction.createMessage({
+    return interaction.reply({
         embeds: [
             {
                 url:         docsURL(version, type ? "typeAlias" : "interface", use.module, name),

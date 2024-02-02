@@ -23,18 +23,18 @@ export default class EditSnipeCommand extends Command {
             snipe = await getSnipe(channel, "edit");
         } catch (e) {
             const err = e as Error;
-            return interaction.createMessage({
+            return interaction.reply({
                 content: `Failed to fetch snipe: **${err.name}: ${err.message}**`,
                 flags:   MessageFlags.EPHEMERAL
             });
         }
         if (!snipe) {
-            return interaction.createMessage({
+            return interaction.reply({
                 content: "No snipes found.",
                 flags:   MessageFlags.EPHEMERAL
             });
         }
-        return interaction.createMessage({
+        return interaction.reply({
             embeds: [
                 {
                     title:  "Edit Snipe",

@@ -16,7 +16,7 @@ export default class EvalCommand extends Command {
     override async run(this: Client, interaction: CommandInteraction) {
         // eslint-disable-next-line unicorn/prefer-ternary
         if (interaction.user.id === "242843345402069002") {
-            return interaction.createMessage({
+            return interaction.reply({
                 embeds: [
                     {
                         title:       "Eval Result",
@@ -26,7 +26,7 @@ export default class EvalCommand extends Command {
                 ]
             });
         } else {
-            return interaction.createMessage({ content: "Sike" });
+            return interaction.reply({ content: "Sike" });
         }
     }
 
