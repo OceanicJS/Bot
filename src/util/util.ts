@@ -79,17 +79,7 @@ export async function checkVersion(version: string): Promise<boolean> {
     if (await exists(`${Config.dataDir}/docs/${version}.json`)) {
         return true;
     } else {
-        if (!GenerationQueue.has(version)) {
-            GenerationQueue.add(version, async() => {
-                await getVersion(version)
-                    .then(
-                        () => GenerationLogs.save(version),
-                        (err: Error) => discordLog({
-                            content: `Generation for **${version}** failed.\n\n\`\`\`\n${format(err)}\`\`\``
-                        })
-                    );
-            });
-        }
+        void generate(version);
         return false;
     }
 }
@@ -319,4 +309,21 @@ export function formatReflection(ref: JSONOutput.DeclarationReflection | Reflect
 
 export function discordLog(options: Omit<ExecuteWebhookOptions, "wait">) {
     return getClient().rest.webhooks.execute(Config.logWebhook.id, Config.logWebhook.token, { ...options, wait: true });
+}
+
+export async function generate(version: string) {
+    if (!GenerationQueue.has(version)) {
+        return new Promise<void>(resolve => {
+            GenerationQueue.add(version, async() => {
+                await getVersion(version)
+                    .then(
+                        () => GenerationLogs.save(version),
+                        (err: Error) => discordLog({
+                            content: `Generation for **${version}** failed.\n\n\`\`\`\n${format(err)}\`\`\``
+                        })
+                    )
+                    .then(() => resolve());
+            });
+        });
+    }
 }

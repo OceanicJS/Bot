@@ -1,4 +1,4 @@
-import { Config, getCommitCount } from "./util/util.js";
+import { Config, generate, getCommitCount } from "./util/util.js";
 import EncryptionHandler from "./util/EncryptionHandler.js";
 import Cache from "./util/Cache.js";
 import express from "express";
@@ -58,6 +58,9 @@ hook.on("push", async ({ payload: data }) => {
             await Cache.write(cache, key);
         }
         await Cache.unlock(key);
+    } else if (data.ref.startsWith("refs/tags/")) {
+        const version = data.ref.slice(11);
+        void generate(version);
     }
 });
 
@@ -70,7 +73,7 @@ const app = express()
         res.cookie("oceanic-satate", state, { maxAge: 1000 * 60 * 5, signed: true });
         return res.redirect(OAuthHelper.constructURL({
             clientID:    Config.client.id,
-            scopes:      [OAuthScopes.IDENTIFY, "role_connections.write", OAuthScopes.CONNECTIONS],
+            scopes:      [OAuthScopes.IDENTIFY, OAuthScopes.ROLE_CONNECTIONS_WRITE, OAuthScopes.CONNECTIONS],
             state,
             redirectURI: Config.client.redirectURI,
             prompt:      "none"
