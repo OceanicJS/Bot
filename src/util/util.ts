@@ -128,7 +128,7 @@ export function docsURL(version: string, type: "class" | "interface" | "enum" | 
             return `https://docs.oceanic.ws/v${version}#type=${type as string}&module=${module}&name=${name}&otherName=${otherName || "undefined"}`;
         }
     }
-    return `https://docs.oceanic.ws/v${version}/${typeName}/${includeModule ? `${module.replaceAll("/", "_")}.` : ""}${name}.html${otherName ? `#${otherName}` : ""}`;
+    return `https://docs.oceanic.ws/v${version}/${typeName}/${includeModule ? `${module.replaceAll("/", "_")}.` : ""}${name.replaceAll("/", "_")}.html${otherName ? `#${otherName}` : ""}`;
 }
 
 export async function find(version: string, name: string) {
