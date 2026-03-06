@@ -253,26 +253,32 @@ export function truncateChoices(values: Array<AutocompleteChoice>) {
 
 export async function getSnipe(channel: string, type: "delete" | "edit") {
     const key = await Cache.lock();
-    const cache = await Cache.read(key);
-    const snipe = cache.snipes.sort((a,b) => b.timestamp - a.timestamp).find(sn => sn.channel === channel && sn.type === type);
-    if (!snipe) {
-        return null;
-    }
-    cache.snipes.splice(cache.snipes.indexOf(snipe), 1);
+    try {
+        const cache = await Cache.read(key);
+        const snipe = cache.snipes.sort((a,b) => b.timestamp - a.timestamp).find(sn => sn.channel === channel && sn.type === type);
+        if (!snipe) {
+            return null;
+        }
+        cache.snipes.splice(cache.snipes.indexOf(snipe), 1);
 
-    await Cache.write(cache, key);
-    await Cache.unlock(key);
-    return snipe;
+        await Cache.write(cache, key);
+        return snipe;
+    } finally {
+        await Cache.unlock(key);
+    }
 }
 
 export async function saveSnipe(author: User, channel: string, content: string, oldContent: string | null, type: "delete" | "edit") {
     const key = await Cache.lock();
-    const cache = await Cache.read(key);
-    cache.snipes = cache.snipes.slice(0, 10);
-    const index = cache.snipes.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content, oldContent, timestamp: Date.now(), type });
-    await Cache.write(cache, key);
-    await Cache.unlock(key);
-    return cache.snipes[index];
+    try {
+        const cache = await Cache.read(key);
+        cache.snipes = cache.snipes.slice(0, 10);
+        const index = cache.snipes.unshift({ author: { id: author.id, tag: author.tag, avatarURL: author.avatarURL() }, channel, content, oldContent, timestamp: Date.now(), type });
+        await Cache.write(cache, key);
+        return cache.snipes[index];
+    } finally {
+        await Cache.unlock(key);
+    }
 }
 
 export const octo = new Octokit({

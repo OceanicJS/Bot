@@ -20,44 +20,47 @@ const hook = new Webhooks({
 hook.on("push", async ({ payload: data }) => {
     if (data.ref === "refs/heads/dev") {
         const key = await Cache.lock();
-        const cache = await Cache.read(key);
-        const counts: Record<string, number> = {};
-        const users: Array<string> = [];
-        for (const commit of data.commits) {
-            const name = commit.author.username ?? commit.author.name;
-            if (cache.connections[name.toLowerCase()]) {
-                counts[name] = (counts[name.toLowerCase()] || 0) + 1;
-                if (!users.includes(name)) {
-                    users.push(name);
+        try {
+            const cache = await Cache.read(key);
+            const counts: Record<string, number> = {};
+            const users: Array<string> = [];
+            for (const commit of data.commits) {
+                const name = commit.author.username ?? commit.author.name;
+                if (cache.connections[name.toLowerCase()]) {
+                    counts[name] = (counts[name.toLowerCase()] || 0) + 1;
+                    if (!users.includes(name)) {
+                        users.push(name);
+                    }
                 }
             }
-        }
 
-        let modified = false;
-        for (const user of users) {
-            const conn = cache.connections[user.toLowerCase()];
-            if (conn) {
-                const helper = client.rest.oauth.getHelper(`Bearer ${EncryptionHandler.decrypt(conn.accessToken)}`);
-                try {
-                    await helper.updateRoleConnection(Config.client.id, {
-                        metadata: {
-                            commits: String(conn.commits + counts[user])
-                        },
-                        platformName:     "Github",
-                        platformUsername: user
-                    });
-                    cache.connections[user.toLowerCase()].commits += counts[user];
-                } catch {
-                    delete cache.connections[user.toLowerCase()];
+            let modified = false;
+            for (const user of users) {
+                const conn = cache.connections[user.toLowerCase()];
+                if (conn) {
+                    const helper = client.rest.oauth.getHelper(`Bearer ${EncryptionHandler.decrypt(conn.accessToken)}`);
+                    try {
+                        await helper.updateRoleConnection(Config.client.id, {
+                            metadata: {
+                                commits: String(conn.commits + counts[user])
+                            },
+                            platformName:     "Github",
+                            platformUsername: user
+                        });
+                        cache.connections[user.toLowerCase()].commits += counts[user];
+                    } catch {
+                        delete cache.connections[user.toLowerCase()];
+                    }
+                    modified = true;
                 }
-                modified = true;
             }
-        }
 
-        if (modified) {
-            await Cache.write(cache, key);
+            if (modified) {
+                await Cache.write(cache, key);
+            }
+        } finally {
+            await Cache.unlock(key);
         }
-        await Cache.unlock(key);
     } else if (data.ref.startsWith("refs/tags/")) {
         const version = data.ref.slice(11);
         void generate(version);
@@ -118,13 +121,16 @@ const app = express()
             });
 
             const key = await Cache.lock();
-            const cache = await Cache.read(key);
-            cache.connections[name.toLowerCase()] = {
-                accessToken: EncryptionHandler.encrypt(token.accessToken),
-                commits:     commitCount
-            };
-            await Cache.write(cache, key);
-            await Cache.unlock(key);
+            try {
+                const cache = await Cache.read(key);
+                cache.connections[name.toLowerCase()] = {
+                    accessToken: EncryptionHandler.encrypt(token.accessToken),
+                    commits:     commitCount
+                };
+                await Cache.write(cache, key);
+            } finally {
+                await Cache.unlock(key);
+            }
             return res.status(200).end(`Successfully linked via @${name}`);
         } else {
             return res.status(400).end("You have not contributed. Please make sure your github account is linked to your Discord account before attempting this.");

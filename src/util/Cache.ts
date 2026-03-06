@@ -26,40 +26,49 @@ export interface Snipe {
 // this definitely has problems, but it'll work good enough
 export default class Cache {
     private static lockKey: string | null = null;
+    private static releaseLock: (() => Promise<void>) | null = null;
 
     static async lock() {
-        await lock(`${Config.dataDir}/cache.json`, { retries: { retries: 10, factor: 1, minTimeout: 1000, maxTimeout: 10000 } });
+        if (this.lockKey !== null) {
+            throw new Error("Attempted to lock cache while another cache lock is already active in this process");
+        }
+
+        const release = await lock(`${Config.dataDir}/cache.json`, { retries: { retries: 10, factor: 1, minTimeout: 1000, maxTimeout: 10000 } });
 
         this.lockKey = randomBytes(16).toString("hex");
+        this.releaseLock = release;
         return this.lockKey;
     }
 
     static async read(key?: string) {
         let didLock = false;
+        let lockKey = key;
         if (key === undefined) {
-            key = await this.lock();
+            lockKey = await this.lock();
             didLock = true;
         }
 
-        if (key !== this.lockKey) {
+        if (lockKey !== this.lockKey) {
             throw new Error("Attempted to read cache with invalid key");
         }
 
-        let data: ICache | undefined;
-        if (await exists(`${Config.dataDir}/cache.json`)) {
-            try {
-                data = JSON.parse(await readFile(`${Config.dataDir}/cache.json`, "utf8")) as ICache;
-            } catch (err) {
-                await handleError("Failed To Load Cache", err as Error);
-                throw err; // rethrow so we don't accidentally delete the file or something dumb
+        try {
+            let data: ICache | undefined;
+            if (await exists(`${Config.dataDir}/cache.json`)) {
+                try {
+                    data = JSON.parse(await readFile(`${Config.dataDir}/cache.json`, "utf8")) as ICache;
+                } catch (err) {
+                    await handleError("Failed To Load Cache", err as Error);
+                    throw err; // rethrow so we don't accidentally delete the file or something dumb
+                }
+            }
+
+            return data ?? { commands: [], commandIDs: {}, commit: null, connections: {}, pulls: [], snipes: [] } satisfies ICache;
+        } finally {
+            if (didLock) {
+                await this.unlock(lockKey);
             }
         }
-
-        if (didLock) {
-            await this.unlock(key);
-        }
-
-        return data ?? { commands: [], commandIDs: {}, commit: null, connections: {}, pulls: [], snipes: [] } satisfies ICache;
     }
 
     static async unlock(key: string) {
@@ -67,24 +76,36 @@ export default class Cache {
             throw new Error("Attempted to unlock cache with invalid key");
         }
 
-        await unlock(`${Config.dataDir}/cache.json`);
+        const release = this.releaseLock;
+        this.releaseLock = null;
         this.lockKey = null;
+
+        if (release) {
+            await release();
+            return;
+        }
+
+        await unlock(`${Config.dataDir}/cache.json`);
     }
 
     static async write(data: ICache, key?: string) {
         let didLock = false;
+        let lockKey = key;
         if (key === undefined) {
-            key = await this.lock();
+            lockKey = await this.lock();
             didLock = true;
         }
 
-        if (key !== this.lockKey) {
+        if (lockKey !== this.lockKey) {
             throw new Error("Attempted to write cache with invalid key");
         }
 
-        await writeFile(`${Config.dataDir}/cache.json`, JSON.stringify(data, null, 2));
-        if (didLock) {
-            await this.unlock(key);
+        try {
+            await writeFile(`${Config.dataDir}/cache.json`, JSON.stringify(data, null, 2));
+        } finally {
+            if (didLock) {
+                await this.unlock(lockKey);
+            }
         }
     }
 }

@@ -30,21 +30,24 @@ export default class Commands {
     static async register(client: Client) {
         const commands = this.toJSON();
         const key = await Cache.lock();
-        const cache = await Cache.read(key);
-        if (JSON.stringify(commands) !== JSON.stringify(cache.commands)) {
-            let ids: Record<string, string>;
-            try {
-                ids = Object.fromEntries((await client.application.bulkEditGuildCommands(Config.guild, commands)).map(b => [b.name, b.id]));
-            } catch (err) {
-                console.log("Command registration error, index list:");
-                console.log(commands.map((c, i) => `${i}: ${c.name}`).join("\n"));
-                throw err;
+        try {
+            const cache = await Cache.read(key);
+            if (JSON.stringify(commands) !== JSON.stringify(cache.commands)) {
+                let ids: Record<string, string>;
+                try {
+                    ids = Object.fromEntries((await client.application.bulkEditGuildCommands(Config.guild, commands)).map(b => [b.name, b.id]));
+                } catch (err) {
+                    console.log("Command registration error, index list:");
+                    console.log(commands.map((c, i) => `${i}: ${c.name}`).join("\n"));
+                    throw err;
+                }
+                cache.commands = commands;
+                cache.commandIDs = ids;
+                await Cache.write(cache, key);
             }
-            cache.commands = commands;
-            cache.commandIDs = ids;
-            await Cache.write(cache, key);
+        } finally {
+            await Cache.unlock(key);
         }
-        await Cache.unlock(key);
     }
 
     static toJSON() {
