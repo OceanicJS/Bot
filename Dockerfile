@@ -1,8 +1,8 @@
-FROM node:20-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 RUN echo -e "update-notifier=false\nloglevel=error\nnode-linker=hoisted" > ~/.npmrc
-RUN npm install --no-save pnpm
+RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
 RUN npx pnpm install  --frozen-lockfile
 COPY . .
