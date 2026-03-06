@@ -2,6 +2,7 @@
   "name": "oceanic-bot",
   "version": "1.0.0",
   "description": "A bot made with Oceanic.",
+  "packageManager": "pnpm@9.6.0",
   "main": "index.ts",
   "scripts": {
     "start": "node --no-warnings --no-deprecation --experimental-specifier-resolution=node dist/index.js",
