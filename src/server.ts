@@ -82,6 +82,7 @@ const app = express()
             prompt:      "none"
         }));
     })
+    .get("/up", async (_req, res) => res.status(204).end())
     .get("/callback", async(req, res) => {
         if (!req.query.code) {
             return res.status(400).send("Invalid Code");
