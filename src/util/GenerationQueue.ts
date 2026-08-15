@@ -31,8 +31,4 @@ export default class GenerationQueue {
     static getCurrent(): string | null {
         return this.current;
     }
-
-    static has(label: string): boolean {
-        return this.current === label || this.queue.some(task => task.label === label);
-    }
 }

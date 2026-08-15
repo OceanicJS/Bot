@@ -4,6 +4,7 @@ import GenerationLogs from "../../util/GenerationLogs.js";
 import { formatReflection } from "../../util/util.js";
 import convertType from "../convertType.js";
 
+import processAccessor from "./accessor.js";
 import processProperty from "./property.js";
 
 import type { Interface } from "../types.js";
@@ -24,6 +25,22 @@ export default function processInterface(data: JSONOutput.DeclarationReflection,
                     const prop = processProperty(child);
                     if (prop) {
                         iface.properties.push(prop);
+                    }
+                    break;
+                }
+
+                case ReflectionKind.Accessor: {
+                    const accessor = processAccessor(child);
+                    if (accessor) {
+                        // interfaces don't have a separate accessors list, so getters are exposed as (readonly) properties
+                        iface.properties.push({
+                            comment: accessor.comment,
+                            name: accessor.name,
+                            optional: child.flags.isOptional ?? false,
+                            readonly: !child.setSignature,
+                            static: accessor.static,
+                            text: accessor.text,
+                        });
                     }
                     break;
                 }

@@ -8,7 +8,7 @@ import { getMap, setName } from "./idToName.js";
 export default function saveNames(project: JSONOutput.ProjectReflection): void {
     if (project.children) {
         for (const child of project.children) {
-            if (![ReflectionKind.Module, ReflectionKind.Class, ReflectionKind.Interface].includes(child.kind)) {
+            if (![ReflectionKind.Module, ReflectionKind.Class, ReflectionKind.Interface, ReflectionKind.TypeAlias, ReflectionKind.Enum, ReflectionKind.Variable, ReflectionKind.Function, ReflectionKind.Reference].includes(child.kind)) {
                 GenerationLogs.addCurrent(`Unexpected reflection type at root: ${formatReflection(child)}`, true);
                 continue;
             }

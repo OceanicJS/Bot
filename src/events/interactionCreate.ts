@@ -8,7 +8,7 @@ import {
 } from "oceanic.js";
 
 import Commands from "../util/Commands.js";
-import { handleAutocomplete } from "../util/docs.js";
+import { handleAutocomplete, versionAutocomplete } from "../util/docs.js";
 import { defaultVersion } from "../util/util.js";
 
 function stringifyArguments(interaction: CommandInteraction | AutocompleteInteraction): string | null {
@@ -53,6 +53,10 @@ export default async function interactionCreateEvent(this: Client, interaction: 
             case "docs":
             case "vdocs": {
                 return handleAutocomplete.call(this, interaction, defaultVersion);
+            }
+
+            case "regenerate": {
+                return versionAutocomplete(interaction);
             }
         }
     }

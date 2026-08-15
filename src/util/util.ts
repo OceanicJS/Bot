@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, unlink } from "node:fs/promises";
 import { format } from "node:util";
 
 import { Octokit } from "@octokit/rest";
@@ -72,8 +72,8 @@ export let versions: Array<string>;
 const minSupport = "1.3.0";
 const minNewLayout = "1.8.0";
 export function refreshVersions(): void {
-    defaultVersion = execSync("npm show oceanic.js version").toString().slice(0, -1);
-    versions = (JSON.parse(execSync("npm show oceanic.js versions --json").toString()) as Array<string>).filter(v => !v.includes("-") && gte(v, minSupport));
+    defaultVersion = execSync("bun pm view oceanic.js version").toString().slice(0, -1);
+    versions = (JSON.parse(execSync("bun pm view oceanic.js versions --json").toString()) as Array<string>).filter(v => !v.includes("-") && gte(v, minSupport));
 }
 setInterval(refreshVersions.bind(null), 6e5);
 refreshVersions();
@@ -318,19 +318,46 @@ export function discordLog(options: Omit<ExecuteWebhookOptions, "wait">): Promis
     return getClient().rest.webhooks.execute(Config.logWebhook.id, Config.logWebhook.token, { ...options, wait: true });
 }
 
+// tracks in-flight generations by version so concurrent callers (e.g. a tag push webhook
+// racing a manual regenerate) await the same run instead of the second one silently no-opping
+const generationPromises = new Map<string, Promise<void>>();
+
 export async function generate(version: string): Promise<void> {
-    if (!GenerationQueue.has(version)) {
-        return new Promise<void>((resolve) => {
-            GenerationQueue.add(version, async () => {
-                await getVersion(version)
-                    .then(
-                        () => GenerationLogs.save(version),
-                        (err: unknown) => discordLog({
-                            content: `Generation for **${version}** failed.\n\n\`\`\`\n${format(err)}\`\`\``,
-                        }),
-                    )
-                    .then(() => { resolve(); });
-            });
-        });
+    const existing = generationPromises.get(version);
+    if (existing) {
+        return existing;
     }
+
+    // a freshly tagged/published version may not be in the cached npm versions list yet
+    if (!versions.includes(version)) {
+        refreshVersions();
+    }
+
+    const promise = new Promise<void>((resolve) => {
+        GenerationQueue.add(version, async () => {
+            // resolve no matter what happens below - a throw here (e.g. posting the log webhook
+            // failing) must never leave generate()'s returned promise hanging forever
+            try {
+                await getVersion(version).then(
+                    () => GenerationLogs.save(version),
+                    (err: unknown) => discordLog({
+                        content: `Generation for **${version}** failed.\n\n\`\`\`\n${format(err)}\`\`\``,
+                    }),
+                );
+            } catch (err) {
+                console.error(`Failed to finalize generation for "${version}":`, err);
+            } finally {
+                resolve();
+            }
+        });
+    }).finally(() => generationPromises.delete(version));
+
+    generationPromises.set(version, promise);
+    return promise;
+}
+
+// deletes the previously generated data (if any) and regenerates it from scratch
+export async function regenerate(version: string): Promise<void> {
+    await unlink(`${Config.dataDir}/docs/${version}.json`).catch(() => { /* ignore, may not exist yet */ });
+    await generate(version);
 }

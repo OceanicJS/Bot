@@ -5,6 +5,7 @@ import { type JSONOutput, ReflectionKind } from "typedoc";
 import GenerationLogs from "../util/GenerationLogs.js";
 import { Config, formatReflection } from "../util/util.js";
 
+import convertType from "./convertType.js";
 import { resetNames } from "./idToName.js";
 import processClass from "./process/class.js";
 import processEnum from "./process/enum.js";
@@ -16,6 +17,106 @@ import processVariable from "./process/variable.js";
 import saveNames from "./saveNames.js";
 
 import type { Overload, Parameter, Root } from "./types.js";
+
+// event properties are typed as a tuple of their parameters (one overload) or a union of
+// such tuples (multiple overloads), e.g. `[user: User]` or `[user: User] | [user: Uncached]`
+function eventOverloadsFromType(label: string, type: JSONOutput.SomeType | undefined): Array<Overload> {
+    if (!type) {
+        GenerationLogs.addCurrent(`Event "${label}" has no type`);
+        return [];
+    }
+
+    const tupleTypes = type.type === "union" ? type.types : [type];
+    return tupleTypes.map((tupleType) => {
+        if (tupleType.type !== "tuple") {
+            GenerationLogs.addCurrent(`Unexpected non-tuple overload type "${tupleType.type}" for event "${label}"`);
+            return { parameters: [], typeParameters: [] };
+        }
+
+        const parameters: Array<Parameter> = (tupleType.elements ?? []).map((element) => {
+            if (element.type !== "namedTupleMember") {
+                GenerationLogs.addCurrent(`Unexpected non-named tuple element "${element.type}" for event "${label}"`);
+                return { name: "", optional: false, text: convertType(element) };
+            }
+
+            return {
+                name: element.name,
+                optional: element.isOptional,
+                text: convertType(element.element),
+            };
+        });
+
+        return { parameters, typeParameters: [] };
+    });
+}
+
+// handles a single reflection, attributing it to the given module name; namespaces recurse
+// into their own children (attributed to the same module) rather than being processed themselves
+function processReflectionChild(child: JSONOutput.DeclarationReflection, module: string, root: Root, rawInterfaces: Map<string, JSONOutput.DeclarationReflection>): void {
+    switch (child.kind) {
+        case ReflectionKind.Class: {
+            const clazz = processClass(child, module);
+            root.classes.push(clazz);
+            break;
+        }
+
+        case ReflectionKind.Interface: {
+            const iface = processInterface(child, module);
+            root.interfaces.push(iface);
+            rawInterfaces.set(iface.name, child);
+            break;
+        }
+
+        case ReflectionKind.TypeAlias: {
+            const typeAlias = processTypeAlias(child, module);
+            if (typeAlias) {
+                root.typeAliases.push(typeAlias);
+            }
+            break;
+        }
+
+        case ReflectionKind.Enum: {
+            const en = processEnum(child, module);
+            root.enums.push(en);
+            break;
+        }
+
+        case ReflectionKind.Variable: {
+            const variable = processVariable(child, module);
+            if (variable) {
+                root.variables.push(variable);
+            }
+            break;
+        }
+
+        case ReflectionKind.Function: {
+            const func = processFunction(child, module);
+            root.functions.push(func);
+            break;
+        }
+
+        case ReflectionKind.Reference: {
+            if (child.variant !== "reference") {
+                GenerationLogs.addCurrent(`Skipping non-reference (${child.variant}) reflection ${formatReflection(child)}`);
+                return;
+            }
+            const ref = processReference(child as JSONOutput.ReferenceReflection);
+            root.references.push(ref);
+            break;
+        }
+
+        case ReflectionKind.Namespace: {
+            for (const nested of child.children ?? []) {
+                processReflectionChild(nested, module, root, rawInterfaces);
+            }
+            break;
+        }
+
+        default: {
+            GenerationLogs.addCurrent(`Unexpected reflection kind ${formatReflection(child)}`, true);
+        }
+    }
+}
 
 export default async function run(data: JSONOutput.ProjectReflection, version: string): Promise<void> {
     resetNames();
@@ -30,103 +131,18 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
         functions: [],
         references: [],
     };
+    // keeps the raw (structured) reflections for interfaces around so events can be derived
+    // from their actual signature types instead of re-parsing the stringified property text
+    const rawInterfaces = new Map<string, JSONOutput.DeclarationReflection>();
     if (data.children) {
         for (const child of data.children) {
             if (child.kind !== ReflectionKind.Module) {
-                switch (child.kind) {
-                    case ReflectionKind.Class: {
-                        const clazz = processClass(child, child.name);
-                        root.classes.push(clazz);
-                        break;
-                    }
-
-                    case ReflectionKind.Interface: {
-                        const iface = processInterface(child, child.name);
-                        root.interfaces.push(iface);
-                        break;
-                    }
-
-                    case ReflectionKind.TypeAlias: {
-                        const typeAlias = processTypeAlias(child, child.name);
-                        if (typeAlias) {
-                            root.typeAliases.push(typeAlias);
-                        }
-                        break;
-                    }
-
-                    default: {
-                        GenerationLogs.addCurrent(`Unexpected reflection kind ${formatReflection(child)}`, true);
-                    }
-                }
+                processReflectionChild(child, child.name, root, rawInterfaces);
                 continue;
             }
 
-            if (!child.children) {
-                continue;
-            }
-
-            for (const child2 of child.children) {
-                switch (child2.kind) {
-                    case ReflectionKind.Class: {
-                        const clazz = processClass(child2, child.name);
-                        root.classes.push(clazz);
-                        break;
-                    }
-
-                    case ReflectionKind.Interface: {
-                        const iface = processInterface(child2, child.name);
-                        root.interfaces.push(iface);
-                        break;
-                    }
-
-                    case ReflectionKind.Enum: {
-                        const en = processEnum(child2, child.name);
-                        root.enums.push(en);
-                        break;
-                    }
-
-                    case ReflectionKind.TypeAlias: {
-                        const typeAlias = processTypeAlias(child2, child.name);
-                        if (typeAlias) {
-                            root.typeAliases.push(typeAlias);
-                        }
-                        break;
-                    }
-
-                    case ReflectionKind.Variable: {
-                        const variable = processVariable(child2, child.name);
-                        if (variable) {
-                            root.variables.push(variable);
-                        }
-                        break;
-                    }
-
-                    case ReflectionKind.Function: {
-                        const func = processFunction(child2, child.name);
-                        root.functions.push(func);
-                        break;
-                    }
-
-                    case ReflectionKind.Reference: {
-                        if (child2.variant !== "reference") {
-                            GenerationLogs.addCurrent(`Skipping non-reference (${child.variant}) reflection ${formatReflection(child2)}`);
-                            continue;
-                        }
-                        const ref = processReference(child2 as JSONOutput.ReferenceReflection);
-                        root.references.push(ref);
-                        break;
-                    }
-
-                    // I can't be bothered to handle this right now
-                    case ReflectionKind.Namespace: {
-                        GenerationLogs.addCurrent(`Skipping ${formatReflection(child2)}`);
-                        break;
-                    }
-
-                    default: {
-                        GenerationLogs.addCurrent(`Unexpected reflection kind ${formatReflection(child2)}`, true);
-                    }
-                }
+            for (const child2 of child.children ?? []) {
+                processReflectionChild(child2, child.name, root, rawInterfaces);
             }
         }
     }
@@ -142,36 +158,12 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
             continue;
         }
 
+        const rawIface = rawInterfaces.get(iface.name);
+
         console.log(`Processing events interface ${iface.name} for class ${clazz.name}`);
         for (const property of iface.properties) {
-            const overloads: Array<Overload> = [];
-            if (property.text === "[]") {
-                overloads.push({
-                    parameters: [],
-                    typeParameters: [],
-                });
-            } else {
-                const p = (property.text.replaceAll(/\s/g, "").replaceAll("[]", "%ARRAY%").match(/\[.*?]/g) ?? []).map(m => m.replaceAll("%ARRAY%", "[]"));
-                for (const sig of p) {
-                    const parameters: Array<Parameter> = [];
-                    const pr = sig.slice(1, -1).replaceAll(/(<.*?(?:,.*?)+>)/g, (_m, p1: string) => p1.replaceAll(",", "%COMMA%")).replaceAll(/(<.*?(?:\|.*?)+>)/g, (_m, p1: string) => p1.replaceAll("|", "%PIPE%")).split(",");
-                    for (const param of pr) {
-                        const colonIndex = param.indexOf(":");
-                        const name = param.slice(0, colonIndex);
-                        const type = param.slice(colonIndex + 1);
-                        parameters.push({
-                            name: name.endsWith("?") ? name.slice(0, -1) : name,
-                            optional: name.endsWith("?"),
-                            text: type.split("|").join(" | ").replaceAll("%COMMA%", ", ").replaceAll("%PIPE%", " | "),
-                        });
-                    }
-
-                    overloads.push({
-                        parameters,
-                        typeParameters: [],
-                    });
-                }
-            }
+            const rawProperty = rawIface?.children?.find(c => c.name === property.name);
+            const overloads = eventOverloadsFromType(`${iface.name}#${property.name}`, rawProperty?.type);
             root.classes[root.classes.indexOf(clazz)].events.push({
                 comment: property.comment,
                 interface: iface.name,

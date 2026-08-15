@@ -458,6 +458,15 @@ export async function typeRunner(this: Client, interaction: CommandInteraction, 
     });
 }
 
+export function versionAutocomplete(interaction: AutocompleteInteraction): unknown {
+    const focused = interaction.data.options.getFocused<InteractionOptionsString>(true);
+    const search = new FuzzySearch(versions, undefined, {
+        sort: true,
+    });
+
+    return interaction.result(truncateChoices(search.search(focused.value).map(val => ({ name: val, value: val }))));
+}
+
 export async function handleAutocomplete(this: Client, interaction: AutocompleteInteraction, version: string): Promise<unknown> {
     const check = await checkVersion(version);
     if (!check) {
@@ -499,11 +508,7 @@ export async function handleAutocomplete(this: Client, interaction: Autocomplete
 
     switch (focused.name) {
         case "version": {
-            const search = new FuzzySearch(versions, undefined, {
-                sort: true,
-            });
-
-            return interaction.result(truncateChoices(search.search(focused.value).map(val => ({ name: val, value: val }))));
+            return versionAutocomplete(interaction);
         }
         case "interface": {
             const search = new FuzzySearch(root.interfaces.map(t => t.name), undefined, {

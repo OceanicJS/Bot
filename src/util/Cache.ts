@@ -25,6 +25,10 @@ export interface Snipe {
     type: "delete" | "edit";
 }
 
+function getDefaultCache(): ICache {
+    return { commands: [], commandIDs: {}, commit: null, connections: {}, pulls: [], snipes: [] };
+}
+
 // this definitely has problems, but it'll work good enough
 export default class Cache {
     private static lockKey: string | null = null;
@@ -33,6 +37,11 @@ export default class Cache {
     static async lock(): Promise<string> {
         if (this.lockKey !== null) {
             throw new Error("Attempted to lock cache while another cache lock is already active in this process");
+        }
+
+        // proper-lockfile requires the target file to already exist (it resolves the realpath before locking)
+        if (!await exists(`${Config.dataDir}/cache.json`)) {
+            await writeFile(`${Config.dataDir}/cache.json`, JSON.stringify(getDefaultCache(), null, 2));
         }
 
         const release = await lock(`${Config.dataDir}/cache.json`, { retries: { retries: 10, factor: 1, minTimeout: 1000, maxTimeout: 10000 } });
@@ -65,7 +74,7 @@ export default class Cache {
                 }
             }
 
-            return data ?? { commands: [], commandIDs: {}, commit: null, connections: {}, pulls: [], snipes: [] } satisfies ICache;
+            return data ?? getDefaultCache();
         } finally {
             if (didLock) {
                 await this.unlock(lockKey);

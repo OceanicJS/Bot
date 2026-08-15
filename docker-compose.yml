@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+    init: true
+    volumes:
+      - ./data:/data
+      - ./config.jsonc:/app/config.jsonc
+    healthcheck:
+      test: wget -q --spider http://127.0.0.1:3621
+      interval: 5s
+      timeout: 1s
+    restart: always
