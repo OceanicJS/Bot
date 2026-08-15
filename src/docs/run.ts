@@ -156,7 +156,9 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
                     const parameters: Array<Parameter> = [];
                     const pr = sig.slice(1, -1).replaceAll(/(<.*?(?:,.*?)+>)/g, (_m, p1: string) => p1.replaceAll(",", "%COMMA%")).replaceAll(/(<.*?(?:\|.*?)+>)/g, (_m, p1: string) => p1.replaceAll("|", "%PIPE%")).split(",");
                     for (const param of pr) {
-                        const [name, type] = param.split(":");
+                        const colonIndex = param.indexOf(":");
+                        const name = param.slice(0, colonIndex);
+                        const type = param.slice(colonIndex + 1);
                         parameters.push({
                             name: name.endsWith("?") ? name.slice(0, -1) : name,
                             optional: name.endsWith("?"),

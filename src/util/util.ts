@@ -232,7 +232,7 @@ export async function linkType(version: string, text: string): Promise<string> {
     for (const match of typeAliasMatches) {
         const typeAlias = root.typeAliases.find(c => c.name === match);
         if (typeAlias) {
-            text = text.replaceAll(new RegExp(`\\b(${match})\\b`, "gi"), `[${match}](${docsURL(version, "typeAlias", typeAlias.module, typeAlias.name)})`);
+            text = text.replaceAll(new RegExp(`\\b(${match})\\b`, "g"), `[${match}](${docsURL(version, "typeAlias", typeAlias.module, typeAlias.name)})`);
         }
     }
     for (const match of intrinsicMatches) {

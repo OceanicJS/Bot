@@ -33,6 +33,6 @@ export default class GenerationQueue {
     }
 
     static has(label: string): boolean {
-        return this.queue.some(task => task.label === label);
+        return this.current === label || this.queue.some(task => task.label === label);
     }
 }

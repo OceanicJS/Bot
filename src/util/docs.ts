@@ -194,7 +194,7 @@ export async function classRunner(this: Client, interaction: CommandInteraction,
             text += (text === "" ? "" : "\n") + method;
         }
         fields.push({
-            name: `Method${methods.length === 1 ? "" : "s"} (${clazz.methods.length})`,
+            name: `Method${clazz.methods.length === 1 ? "" : "s"} (${clazz.methods.length})`,
             value: text,
             inline: true,
         });

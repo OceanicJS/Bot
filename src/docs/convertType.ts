@@ -95,7 +95,7 @@ export default function convertType(type: JSONOutput.SomeType): string {
                 if (tree.children) {
                     ref[tree.name] = {};
                     for (const child of tree.children) {
-                        walk(obj[tree.name], child);
+                        walk(ref[tree.name], child);
                     }
                 } else {
                     if (tree.type) {
