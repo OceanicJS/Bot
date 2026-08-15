@@ -1,7 +1,7 @@
 type QueueFunction = () => Promise<unknown>;
 export default class GenerationQueue {
     private static current: string | null = null;
-    private static queue: Array<{ func: QueueFunction; label: string; }> = [];
+    private static queue: Array<{ func: QueueFunction; label: string }> = [];
     private static running = false;
 
     private static async run(): Promise<void> {
@@ -21,7 +21,7 @@ export default class GenerationQueue {
         }
     }
 
-    static add(label: string, func: QueueFunction) {
+    static add(label: string, func: QueueFunction): void {
         this.queue.push({ label, func });
         if (!this.running) {
             void this.run();
@@ -32,7 +32,7 @@ export default class GenerationQueue {
         return this.current;
     }
 
-    static has(label: string) {
+    static has(label: string): boolean {
         return this.queue.some(task => task.label === label);
     }
 }

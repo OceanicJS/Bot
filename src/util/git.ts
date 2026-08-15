@@ -1,15 +1,16 @@
-import Cache from "./Cache.js";
-import { Config, octo, truncate, truncateWords } from "./util.js";
 import { type Client, DiscordHTTPError } from "oceanic.js";
 
-export default async function runGit(this: Client) {
+import Cache from "./Cache.js";
+import { Config, octo, truncate, truncateWords } from "./util.js";
+
+export default async function runGit(this: Client): Promise<void> {
     const key = await Cache.lock();
     try {
         const cache = await Cache.read(key);
         const commits = await octo.repos.listCommits({
-            owner:    "discord",
-            repo:     "discord-api-docs",
-            per_page: 100
+            owner: "discord",
+            repo: "discord-api-docs",
+            per_page: 100,
         });
         const previous = cache.commit;
         cache.commit = commits.data[0].sha;
@@ -21,7 +22,7 @@ export default async function runGit(this: Client) {
             if (newCommits.length !== 0) {
                 let log = "";
                 for (const commit of newCommits) {
-                    const newLog = `[\`${commit.sha.slice(0, 7)}\`](${commit.html_url}) ${truncate(commit.commit.message.split("\n")[0], 50)}${commit.author ? ` - ${commit.author.name || commit.author.login}` : ""}\n`;
+                    const newLog = `[\`${commit.sha.slice(0, 7)}\`](${commit.html_url}) ${truncate(commit.commit.message.split("\n")[0], 50)}${commit.author ? ` - ${commit.author.name ?? commit.author.login}` : ""}\n`;
                     if (log.length + newLog.length >= 4096) {
                         break;
                     }
@@ -30,28 +31,28 @@ export default async function runGit(this: Client) {
                 await this.rest.webhooks.execute(Config.docsWebhook.id, Config.docsWebhook.token, {
                     embeds: [
                         {
-                            color:  7506394,
-                            title:  `[discord-api-docs:main] ${newCommits.length} new commit${newCommits.length === 1 ? "" : "s"}`,
+                            color: 7506394,
+                            title: `[discord-api-docs:main] ${newCommits.length} new commit${newCommits.length === 1 ? "" : "s"}`,
                             author: {
-                                name:    "Discord",
-                                iconURL: "https://avatars.githubusercontent.com/u/1965106?v=4"
+                                name: "Discord",
+                                iconURL: "https://avatars.githubusercontent.com/u/1965106?v=4",
                             },
                             description: log || "No Log",
-                            url:         commits.data[0].html_url
-                        }
-                    ]
+                            url: commits.data[0].html_url,
+                        },
+                    ],
                 });
             }
         }
 
         const { data: pulls } = await octo.pulls.list({
-            owner:    "discord",
-            repo:     "discord-api-docs",
+            owner: "discord",
+            repo: "discord-api-docs",
             per_page: 100,
-            state:    "all"
+            state: "all",
         });
 
-        const num = cache.pulls.reduce((a, [id]) => a.concat(id), [] as Array<number>);
+        const num = cache.pulls.reduce<Array<number>>((a, [id]) => a.concat(id), []);
         const temp: Array<[number, string]> = [];
         for (const pull of pulls.reverse()) {
             let state: "open" | "closed" | undefined;
@@ -70,23 +71,23 @@ export default async function runGit(this: Client) {
                 state = pull.state as "open" | "closed";
             }
 
-            if (state && num.length !== 0) {
+            if (num.length !== 0) {
                 try {
                     switch (state) {
                         case "open": {
                             await this.rest.webhooks.execute(Config.docsWebhook.id, Config.docsWebhook.token, {
                                 embeds: [
                                     {
-                                        color:  38912,
-                                        title:  `[discord/discord-api-docs] Pull request opened: #${pull.number} ${truncateWords(pull.title, 256)}`,
+                                        color: 38912,
+                                        title: `[discord/discord-api-docs] Pull request opened: #${pull.number} ${truncateWords(pull.title, 256)}`,
                                         author: {
-                                            name:    pull.user?.name || pull.user?.login || "Discord",
-                                            iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
+                                            name: pull.user?.name ?? pull.user?.login ?? "Discord",
+                                            iconURL: pull.user?.avatar_url ?? "https://avatars.githubusercontent.com/u/1965106?v=4",
                                         },
-                                        description: truncateWords(pull.body || "", 4096),
-                                        url:         pull.html_url
-                                    }
-                                ]
+                                        description: truncateWords(pull.body ?? "", 4096),
+                                        url: pull.html_url,
+                                    },
+                                ],
                             });
                             break;
                         }
@@ -95,14 +96,14 @@ export default async function runGit(this: Client) {
                             await this.rest.webhooks.execute(Config.docsWebhook.id, Config.docsWebhook.token, {
                                 embeds: [
                                     {
-                                        title:  `[discord/discord-api-docs] Pull request closed: #${pull.number} ${truncateWords(pull.title, 256)}`,
+                                        title: `[discord/discord-api-docs] Pull request closed: #${pull.number} ${truncateWords(pull.title, 256)}`,
                                         author: {
-                                            name:    pull.user?.name || pull.user?.login || "Discord",
-                                            iconURL: pull.user?.avatar_url || "https://avatars.githubusercontent.com/u/1965106?v=4"
+                                            name: pull.user?.name ?? pull.user?.login ?? "Discord",
+                                            iconURL: pull.user?.avatar_url ?? "https://avatars.githubusercontent.com/u/1965106?v=4",
                                         },
-                                        url: pull.html_url
-                                    }
-                                ]
+                                        url: pull.html_url,
+                                    },
+                                ],
                             });
                             break;
                         }

@@ -1,17 +1,20 @@
-import processProperty from "./property.js";
-import type { Interface } from "../types.js";
-import convertType from "../convertType.js";
-import GenerationLogs from "../../util/GenerationLogs.js";
-import { formatReflection } from "../../util/util.js";
 import { type JSONOutput, ReflectionKind } from "typedoc";
 
-export default function processInterface(data: JSONOutput.DeclarationReflection, module: string) {
+import GenerationLogs from "../../util/GenerationLogs.js";
+import { formatReflection } from "../../util/util.js";
+import convertType from "../convertType.js";
+
+import processProperty from "./property.js";
+
+import type { Interface } from "../types.js";
+
+export default function processInterface(data: JSONOutput.DeclarationReflection, module: string): Interface {
     const iface: Interface = {
-        name:       data.name,
-        comment:    data.comment?.summary.reduce((a, b) => a + b.text, ""),
-        extends:    data.extendedTypes ? convertType(data.extendedTypes[0]) : undefined,
+        name: data.name,
+        comment: data.comment?.summary.reduce((a, b) => a + b.text, ""),
+        extends: data.extendedTypes ? convertType(data.extendedTypes[0]) : undefined,
         module,
-        properties: []
+        properties: [],
     };
 
     if (data.children) {

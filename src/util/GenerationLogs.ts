@@ -1,16 +1,17 @@
 import GenerationQueue from "./GenerationQueue.js";
 import { discordLog } from "./util.js";
+
 import type { File } from "oceanic.js";
 
 export default class GenerationLogs {
     private static logs = new Map<string, Array<string>>();
 
-    static add(version: string, message: string) {
+    static add(version: string, message: string): boolean {
         this.logs.set(version, [...(this.logs.get(version) ?? []), message]);
         return true;
     }
 
-    static addCurrent(message: string, throwIfNull = false) {
+    static addCurrent(message: string, throwIfNull = false): boolean {
         const version = GenerationQueue.getCurrent();
         if (version === null) {
             if (throwIfNull) {
@@ -23,7 +24,7 @@ export default class GenerationLogs {
         return this.add(version, message);
     }
 
-    static get(version: string, remove = true) {
+    static get(version: string, remove = true): Array<string> {
         const logs = this.logs.get(version);
         if (remove) {
             this.logs.delete(version);
@@ -31,7 +32,7 @@ export default class GenerationLogs {
         return logs ?? [];
     }
 
-    static async save(version: string) {
+    static async save(version: string): Promise<void> {
         const logs = this.get(version);
         let content = `Generation Logs For ${version}`;
         const files: Array<File> = [];
@@ -41,12 +42,12 @@ export default class GenerationLogs {
             content = `Generation for **${version}** completed with ${logs.length} log${logs.length === 1 ? "" : "s"}.`;
             files.push({
                 contents: Buffer.from(logs.join("\n")),
-                name:     "logs.txt"
+                name: "logs.txt",
             });
         }
         await discordLog({
             content,
-            files
+            files,
         });
     }
 }

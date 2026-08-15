@@ -1,30 +1,34 @@
-import saveNames from "./saveNames.js";
-import processClass from "./process/class.js";
-import type { Overload, Parameter, Root } from "./types.js";
-import { resetNames } from "./idToName.js";
-import processInterface from "./process/interface.js";
-import processEnum from "./process/enum.js";
-import processTypeAlias from "./process/typeAlias.js";
-import processVariable from "./process/variable.js";
-import processFunction from "./process/function.js";
-import processReference from "./process/reference.js";
-import { Config, formatReflection } from "../util/util.js";
-import GenerationLogs from "../util/GenerationLogs.js";
-import { type JSONOutput, ReflectionKind } from "typedoc";
 import { writeFile } from "node:fs/promises";
 
-export default async function run(data: JSONOutput.ProjectReflection, version: string) {
+import { type JSONOutput, ReflectionKind } from "typedoc";
+
+import GenerationLogs from "../util/GenerationLogs.js";
+import { Config, formatReflection } from "../util/util.js";
+
+import { resetNames } from "./idToName.js";
+import processClass from "./process/class.js";
+import processEnum from "./process/enum.js";
+import processFunction from "./process/function.js";
+import processInterface from "./process/interface.js";
+import processReference from "./process/reference.js";
+import processTypeAlias from "./process/typeAlias.js";
+import processVariable from "./process/variable.js";
+import saveNames from "./saveNames.js";
+
+import type { Overload, Parameter, Root } from "./types.js";
+
+export default async function run(data: JSONOutput.ProjectReflection, version: string): Promise<void> {
     resetNames();
     saveNames(data);
 
     const root: Root = {
-        classes:     [],
-        enums:       [],
-        interfaces:  [],
+        classes: [],
+        enums: [],
+        interfaces: [],
         typeAliases: [],
-        variables:   [],
-        functions:   [],
-        references:  []
+        variables: [],
+        functions: [],
+        references: [],
     };
     if (data.children) {
         for (const child of data.children) {
@@ -99,9 +103,7 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
 
                     case ReflectionKind.Function: {
                         const func = processFunction(child2, child.name);
-                        if (func) {
-                            root.functions.push(func);
-                        }
+                        root.functions.push(func);
                         break;
                     }
 
@@ -114,7 +116,6 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
                         root.references.push(ref);
                         break;
                     }
-
 
                     // I can't be bothered to handle this right now
                     case ReflectionKind.Namespace: {
@@ -146,8 +147,8 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
             const overloads: Array<Overload> = [];
             if (property.text === "[]") {
                 overloads.push({
-                    parameters:     [],
-                    typeParameters: []
+                    parameters: [],
+                    typeParameters: [],
                 });
             } else {
                 const p = (property.text.replaceAll(/\s/g, "").replaceAll("[]", "%ARRAY%").match(/\[.*?]/g) ?? []).map(m => m.replaceAll("%ARRAY%", "[]"));
@@ -157,24 +158,24 @@ export default async function run(data: JSONOutput.ProjectReflection, version: s
                     for (const param of pr) {
                         const [name, type] = param.split(":");
                         parameters.push({
-                            name:     name.endsWith("?") ? name.slice(0, -1) : name,
+                            name: name.endsWith("?") ? name.slice(0, -1) : name,
                             optional: name.endsWith("?"),
-                            text:     type.split("|").join(" | ").replaceAll("%COMMA%", ", ").replaceAll("%PIPE%", " | ")
+                            text: type.split("|").join(" | ").replaceAll("%COMMA%", ", ").replaceAll("%PIPE%", " | "),
                         });
                     }
 
                     overloads.push({
                         parameters,
-                        typeParameters: []
+                        typeParameters: [],
                     });
                 }
             }
             root.classes[root.classes.indexOf(clazz)].events.push({
-                comment:   property.comment,
+                comment: property.comment,
                 interface: iface.name,
-                name:      property.name,
-                module:    iface.module,
-                overloads
+                name: property.name,
+                module: iface.module,
+                overloads,
             });
         }
     }

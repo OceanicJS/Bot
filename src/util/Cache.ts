@@ -1,15 +1,17 @@
-import { Config, exists } from "./util.js";
-import { handleError } from "./error.js";
+import { randomBytes } from "node:crypto";
+import { readFile, writeFile } from "node:fs/promises";
+
 import { type CreateGuildApplicationCommandOptions } from "oceanic.js";
 import { lock, unlock } from "proper-lockfile";
-import { readFile, writeFile } from "node:fs/promises";
-import { randomBytes } from "node:crypto";
+
+import { handleError } from "./error.js";
+import { Config, exists } from "./util.js";
 
 export interface ICache {
     commandIDs: Record<string, string>;
     commands: Array<CreateGuildApplicationCommandOptions>;
     commit: string | null;
-    connections: Record<string, { accessToken: string; commits: number; }>;
+    connections: Record<string, { accessToken: string; commits: number } | undefined>;
     pulls: Array<[id: number, state: string]>;
     snipes: Array<Snipe>;
 }
@@ -28,7 +30,7 @@ export default class Cache {
     private static lockKey: string | null = null;
     private static releaseLock: (() => Promise<void>) | null = null;
 
-    static async lock() {
+    static async lock(): Promise<string> {
         if (this.lockKey !== null) {
             throw new Error("Attempted to lock cache while another cache lock is already active in this process");
         }
@@ -40,7 +42,7 @@ export default class Cache {
         return this.lockKey;
     }
 
-    static async read(key?: string) {
+    static async read(key?: string): Promise<ICache> {
         let didLock = false;
         let lockKey = key;
         if (key === undefined) {
@@ -71,7 +73,7 @@ export default class Cache {
         }
     }
 
-    static async unlock(key: string) {
+    static async unlock(key: string): Promise<void> {
         if (this.lockKey !== key) {
             throw new Error("Attempted to unlock cache with invalid key");
         }
@@ -88,7 +90,7 @@ export default class Cache {
         await unlock(`${Config.dataDir}/cache.json`);
     }
 
-    static async write(data: ICache, key?: string) {
+    static async write(data: ICache, key?: string): Promise<void> {
         let didLock = false;
         let lockKey = key;
         if (key === undefined) {

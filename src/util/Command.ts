@@ -3,22 +3,23 @@ import {
     ApplicationCommandTypes,
     type Client,
     type CommandInteraction,
+    type CreateApplicationCommandOptions,
     type Permission,
-    type PermissionName
+    type PermissionName,
 } from "oceanic.js";
 
 export default abstract class Command {
     defaultMemberPermissions?: bigint | string | Permission | Array<PermissionName>;
+    abstract description: string;
     descriptionLocalizations?: Record<string, string>;
     dmPermission?: boolean;
-    nameLocalizations?: Record<string, string>;
-    abstract description: string;
     abstract name: string;
+    nameLocalizations?: Record<string, string>;
     abstract type: ApplicationCommandTypes;
     abstract run(this: Client, interaction: CommandInteraction): Promise<unknown>;
     setOptions?(command: ApplicationCommandBuilder): void;
 
-    toJSON() {
+    toJSON(): CreateApplicationCommandOptions {
         const builder = new ApplicationCommandBuilder(this.type, this.name)
             .setDescription(this.description);
         this.setOptions?.(builder);
@@ -41,7 +42,7 @@ export class EmptyCommand extends Command {
     description = "This command is empty.";
     name = "empty";
     type = ApplicationCommandTypes.CHAT_INPUT;
-    async run() {
+    async run(): Promise<never> {
         throw new Error("This command is empty.");
     }
 }

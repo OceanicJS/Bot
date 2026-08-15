@@ -1,13 +1,15 @@
-import convertType from "../convertType.js";
-import type { Constructor } from "../types.js";
-import { getName } from "../idToName.js";
-import GenerationLogs from "../../util/GenerationLogs.js";
-import { formatReflection } from "../../util/util.js";
 import { type JSONOutput, ReflectionKind } from "typedoc";
 
-export default function processConstructor(data: JSONOutput.DeclarationReflection) {
+import GenerationLogs from "../../util/GenerationLogs.js";
+import { formatReflection } from "../../util/util.js";
+import convertType from "../convertType.js";
+import { getName } from "../idToName.js";
+
+import type { Constructor } from "../types.js";
+
+export default function processConstructor(data: JSONOutput.DeclarationReflection): Constructor {
     const construct: Constructor = {
-        parameters: []
+        parameters: [],
     };
 
     // use the last signature
@@ -20,13 +22,13 @@ export default function processConstructor(data: JSONOutput.DeclarationReflectio
                 if (!param.type) {
                     continue;
                 }
-                if (param.type && "name" in param.type && param.type.name === "default" && "id" in param.type && param.type.id !== undefined) {
-                    param.type.name = getName((param.type as { id: number; }).id);
+                if ("name" in param.type && param.type.name === "default" && "id" in param.type && param.type.id !== undefined) {
+                    param.type.name = getName((param.type as { id: number }).id);
                 }
                 construct.parameters.push({
-                    name:     param.name,
-                    text:     convertType(param.type),
-                    optional: param.flags.isOptional ?? false
+                    name: param.name,
+                    text: convertType(param.type),
+                    optional: param.flags.isOptional ?? false,
                 });
             }
         }

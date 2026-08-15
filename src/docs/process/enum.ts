@@ -1,15 +1,17 @@
-import type { Enum } from "../types.js";
-import convertType from "../convertType.js";
-import GenerationLogs from "../../util/GenerationLogs.js";
-import { formatReflection } from "../../util/util.js";
 import { type JSONOutput, ReflectionKind } from "typedoc";
 
-export default function processEnum(data: JSONOutput.DeclarationReflection, module: string) {
+import GenerationLogs from "../../util/GenerationLogs.js";
+import { formatReflection } from "../../util/util.js";
+import convertType from "../convertType.js";
+
+import type { Enum } from "../types.js";
+
+export default function processEnum(data: JSONOutput.DeclarationReflection, module: string): Enum {
     const p: Enum = {
         comment: data.comment?.summary.reduce((a, b) => a + b.text, ""),
-        name:    data.name,
+        name: data.name,
         module,
-        members: []
+        members: [],
     };
     if (data.children) {
         for (const child of data.children) {
@@ -19,8 +21,8 @@ export default function processEnum(data: JSONOutput.DeclarationReflection, modu
             }
             p.members.push({
                 comment: child.comment?.summary.reduce((a, b) => a + b.text, ""),
-                name:    child.name,
-                text:    convertType(child.type as JSONOutput.LiteralType)
+                name: child.name,
+                text: convertType(child.type as JSONOutput.LiteralType),
             });
         }
     }

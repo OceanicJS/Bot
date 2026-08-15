@@ -1,7 +1,6 @@
 export interface Root {
     classes: Array<Class>;
     enums: Array<Enum>;
-    // eslint-disable-next-line @typescript-eslint/ban-types
     functions: Array<Function>;
     interfaces: Array<Interface>;
     references: Array<Reference>;

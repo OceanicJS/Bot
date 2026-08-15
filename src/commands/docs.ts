@@ -1,4 +1,7 @@
-import { checkVersion, defaultVersion } from "../util/util.js";
+import assert from "node:assert";
+
+import { ApplicationCommandOptionTypes, ApplicationCommandTypes, type Client, type CommandInteraction } from "oceanic.js";
+
 import Command from "../util/Command.js";
 import {
     classPropertyRunner,
@@ -7,24 +10,25 @@ import {
     handleIssue,
     interfacePropertyRunner,
     methodRunner,
-    typeRunner
+    typeRunner,
 } from "../util/docs.js";
-import { ApplicationCommandOptionTypes, ApplicationCommandTypes, type Client, type CommandInteraction } from "oceanic.js";
+import { checkVersion, defaultVersion } from "../util/util.js";
+
 import type { ApplicationCommandBuilder } from "@oceanicjs/builders";
-import assert from "node:assert";
 
 export default class DocsCommand extends Command {
     override description = "Get documentation for Oceanic.";
     override name = "docs";
     override type = ApplicationCommandTypes.CHAT_INPUT;
-    override async run(this: Client, interaction: CommandInteraction) {
+    override async run(this: Client, interaction: CommandInteraction): Promise<unknown> {
         const version = defaultVersion;
         const check = await checkVersion(version);
         if (!check) {
-            return handleIssue("loading", interaction, version, true, null, null);
+            handleIssue("loading", interaction, version, true, null, null);
+            return;
         }
         const [type, subType] = interaction.data.options.getSubCommand<["class" | "event" | "method" | "type"] | ["property", "class" | "interface"]>(true);
-        const name = interaction.data.options.getString("class") || interaction.data.options.getString("interface");
+        const name = interaction.data.options.getString("class") ?? interaction.data.options.getString("interface");
         switch (type) {
             case "class": {
                 assert(name);
@@ -64,77 +68,76 @@ export default class DocsCommand extends Command {
                 return typeRunner.call(this, interaction, typeAlias, version);
             }
         }
-
     }
 
-    override setOptions(command: ApplicationCommandBuilder) {
+    override setOptions(command: ApplicationCommandBuilder): void {
         command
-            .addOption("class", ApplicationCommandOptionTypes.SUB_COMMAND, option => {
+            .addOption("class", ApplicationCommandOptionTypes.SUB_COMMAND, (option) => {
                 option.setDescription("Get documentation for a class.")
-                    .addOption("class", ApplicationCommandOptionTypes.STRING, subOption => {
+                    .addOption("class", ApplicationCommandOptionTypes.STRING, (subOption) => {
                         subOption.setDescription("The name of the class to get information about.")
                             .setRequired()
                             .setAutocomplete();
                     });
             })
-            .addOption("event", ApplicationCommandOptionTypes.SUB_COMMAND, option => {
+            .addOption("event", ApplicationCommandOptionTypes.SUB_COMMAND, (option) => {
                 option.setDescription("Get documentation for an event.")
-                    .addOption("class", ApplicationCommandOptionTypes.STRING, subOption => {
+                    .addOption("class", ApplicationCommandOptionTypes.STRING, (subOption) => {
                         subOption.setDescription("The name of the class to get event information from.")
                             .setRequired()
                             .setAutocomplete();
                     })
-                    .addOption("event", ApplicationCommandOptionTypes.STRING, subOption => {
+                    .addOption("event", ApplicationCommandOptionTypes.STRING, (subOption) => {
                         subOption.setDescription("The name of the event to get information about.")
                             .setRequired()
                             .setAutocomplete();
                     });
             })
-            .addOption("property", ApplicationCommandOptionTypes.SUB_COMMAND_GROUP, option => {
+            .addOption("property", ApplicationCommandOptionTypes.SUB_COMMAND_GROUP, (option) => {
                 option.setDescription("Get documentation for a property.")
-                    .addOption("class", ApplicationCommandOptionTypes.SUB_COMMAND, subOption => {
+                    .addOption("class", ApplicationCommandOptionTypes.SUB_COMMAND, (subOption) => {
                         subOption.setDescription("Get documentation for a class property.")
-                            .addOption("class", ApplicationCommandOptionTypes.STRING, subSubOption => {
+                            .addOption("class", ApplicationCommandOptionTypes.STRING, (subSubOption) => {
                                 subSubOption.setDescription("The name of the class to get property information from.")
                                     .setRequired()
                                     .setAutocomplete();
                             })
-                            .addOption("property", ApplicationCommandOptionTypes.STRING, subSubOption => {
+                            .addOption("property", ApplicationCommandOptionTypes.STRING, (subSubOption) => {
                                 subSubOption.setDescription("The name of the property to get information about.")
                                     .setRequired()
                                     .setAutocomplete();
                             });
                     })
-                    .addOption("interface", ApplicationCommandOptionTypes.SUB_COMMAND, subOption => {
+                    .addOption("interface", ApplicationCommandOptionTypes.SUB_COMMAND, (subOption) => {
                         subOption.setDescription("Get documentation for an interface property.")
-                            .addOption("interface", ApplicationCommandOptionTypes.STRING, subSubOption => {
+                            .addOption("interface", ApplicationCommandOptionTypes.STRING, (subSubOption) => {
                                 subSubOption.setDescription("The name of the interface to get property information from.")
                                     .setRequired()
                                     .setAutocomplete();
                             })
-                            .addOption("property", ApplicationCommandOptionTypes.STRING, subSubOption => {
+                            .addOption("property", ApplicationCommandOptionTypes.STRING, (subSubOption) => {
                                 subSubOption.setDescription("The name of the property to get information about.")
                                     .setRequired()
                                     .setAutocomplete();
                             });
                     });
             })
-            .addOption("method", ApplicationCommandOptionTypes.SUB_COMMAND, option => {
+            .addOption("method", ApplicationCommandOptionTypes.SUB_COMMAND, (option) => {
                 option.setDescription("Get documentation for a method.")
-                    .addOption("class", ApplicationCommandOptionTypes.STRING, subOption => {
+                    .addOption("class", ApplicationCommandOptionTypes.STRING, (subOption) => {
                         subOption.setDescription("The name of the class to get method information from.")
                             .setRequired()
                             .setAutocomplete();
                     })
-                    .addOption("method", ApplicationCommandOptionTypes.STRING, subOption => {
+                    .addOption("method", ApplicationCommandOptionTypes.STRING, (subOption) => {
                         subOption.setDescription("The name of the method to get information about.")
                             .setRequired()
                             .setAutocomplete();
                     });
             })
-            .addOption("type", ApplicationCommandOptionTypes.SUB_COMMAND, option => {
+            .addOption("type", ApplicationCommandOptionTypes.SUB_COMMAND, (option) => {
                 option.setDescription("Get documentation for a type.")
-                    .addOption("type", ApplicationCommandOptionTypes.STRING, subOption => {
+                    .addOption("type", ApplicationCommandOptionTypes.STRING, (subOption) => {
                         subOption.setDescription("The name of the type to get information about.")
                             .setRequired()
                             .setAutocomplete();

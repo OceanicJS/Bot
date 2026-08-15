@@ -1,8 +1,32 @@
 {
-  "extends": "@uwu-codes/tsconfig/esm",
   "compilerOptions": {
-    "outDir": "dist"
+    "lib": ["ESNext"],
+    "module": "ESNext",
+    "target": "ESNext",
+    "types": ["bun", "node"],
+    "moduleDetection": "force",
+    "inlineSourceMap": true,
+    "importHelpers": false,
+    "newLine": "LF",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "bundler",
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "checkJs": true,
+    "strictPropertyInitialization": true,
+    "strictBindCallApply": true,
+    "verbatimModuleSyntax": true,
+    "declaration": true,
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true,
+    "noUncheckedIndexedAccess": false,
+    "allowImportingTsExtensions": true
   },
-  "include": ["src/**/*", "scripts/**/*"],
-  "exclude": ["node_modules", "dist"]
+    "include": ["eslint.config.mts", "src/**/*"],
+    "exclude": ["node_modules"]
 }

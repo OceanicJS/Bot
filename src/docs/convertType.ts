@@ -1,13 +1,15 @@
-import { getName } from "./idToName.js";
 import GenerationLogs from "../util/GenerationLogs.js";
+
+import { getName } from "./idToName.js";
+
 import type { JSONOutput } from "typedoc";
-function resolveArrayType(type: JSONOutput.ArrayType, level = 1): { level: number; type: string; } {
+function resolveArrayType(type: JSONOutput.ArrayType, level = 1): { level: number; type: string } {
     return type.elementType.type === "array" ? resolveArrayType(type.elementType, level++) : { type: convertType(type.elementType), level };
 }
 
 export default function convertType(type: JSONOutput.SomeType): string {
     if ("name" in type && type.name === "default" && "id" in type && type.id !== undefined) {
-        type.name = getName((type as {id: number; }).id);
+        type.name = getName((type as { id: number }).id);
     }
     switch (type.type) {
         case "array": {
@@ -49,7 +51,7 @@ export default function convertType(type: JSONOutput.SomeType): string {
 
         case "mapped": {
             const { nameType, optionalModifier, parameter, parameterType, readonlyModifier, templateType } = type;
-            return `{ [${readonlyModifier ? "readonly " : ""}${nameType ? `${convertType(nameType)} in ` : ""}${parameter}${optionalModifier ? "?" : ""}: ${convertType(parameterType)}]${templateType ? ` extends ${convertType(templateType)}` : ""} }`;
+            return `{ [${readonlyModifier ? "readonly " : ""}${nameType ? `${convertType(nameType)} in ` : ""}${parameter}${optionalModifier ? "?" : ""}: ${convertType(parameterType)}] extends ${convertType(templateType)} }`;
         }
 
         case "namedTupleMember": {
@@ -78,8 +80,8 @@ export default function convertType(type: JSONOutput.SomeType): string {
         }
 
         case "reference": {
-            if ("name" in type && type.name === "default" && "target" in type && type.target !== undefined) {
-                type.name = typeof type.target === "object" ? (type.target as { qualifiedName: string; }).qualifiedName : getName(type.target);
+            if ("name" in type && type.name === "default" && "target" in type) {
+                type.name = typeof type.target === "object" ? (type.target as { qualifiedName: string }).qualifiedName : getName(type.target);
             }
             const { name, typeArguments } = type;
             return `${name}${typeArguments ? `<${typeArguments.map(convertType).join(", ")}>` : ""}`;
@@ -89,7 +91,7 @@ export default function convertType(type: JSONOutput.SomeType): string {
             const { declaration } = type;
             /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
             const obj: Record<string, any> = {};
-            function walk(ref: Record<string, any>, tree: JSONOutput.DeclarationReflection) {
+            function walk(ref: Record<string, any>, tree: JSONOutput.DeclarationReflection): void {
                 if (tree.children) {
                     ref[tree.name] = {};
                     for (const child of tree.children) {
@@ -102,7 +104,7 @@ export default function convertType(type: JSONOutput.SomeType): string {
                 }
             }
             /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
-            if (declaration?.children) {
+            if (declaration.children) {
                 for (const child of declaration.children) {
                     walk(obj, child);
                 }
@@ -137,8 +139,8 @@ export default function convertType(type: JSONOutput.SomeType): string {
         }
 
         default: {
-            GenerationLogs.addCurrent(`TODO Type: ${(type as { type: string; }).type} (${JSON.stringify(type)})`);
-            return `TODO: ${(type as { type: string; }).type}`;
+            GenerationLogs.addCurrent(`TODO Type: ${(type as { type: string }).type} (${JSON.stringify(type)})`);
+            return `TODO: ${(type as { type: string }).type}`;
         }
     }
 }

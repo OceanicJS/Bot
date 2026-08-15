@@ -1,20 +1,29 @@
-import { Config, generate, getCommitCount } from "./util/util.js";
-import EncryptionHandler from "./util/EncryptionHandler.js";
-import Cache from "./util/Cache.js";
+import { randomBytes } from "node:crypto";
+
+import { Webhooks, createNodeMiddleware } from "@octokit/webhooks";
+import cookieParser from "cookie-parser";
 import express from "express";
 import morgan from "morgan";
 import { Client, OAuthHelper, OAuthScopes } from "oceanic.js";
-import cookieParser from "cookie-parser";
-import { Webhooks, createNodeMiddleware } from "@octokit/webhooks";
-import { randomBytes } from "node:crypto";
+
+import Cache from "./util/Cache.js";
+import EncryptionHandler from "./util/EncryptionHandler.js";
+import { Config, generate, getCommitCount } from "./util/util.js";
+
+import type { NextFunction, Request, RequestHandler, Response } from "express";
+
+function wrap(handler: (req: Request, res: Response) => Promise<unknown>): RequestHandler {
+    return (req, res, next: NextFunction) => {
+        handler(req, res).catch(next);
+    };
+}
 
 const client = new Client({
-    auth: Config.client.token
+    auth: Config.client.token,
 });
 
-
 const hook = new Webhooks({
-    secret: Config.gitSecret
+    secret: Config.gitSecret,
 });
 
 hook.on("push", async ({ payload: data }) => {
@@ -42,14 +51,14 @@ hook.on("push", async ({ payload: data }) => {
                     try {
                         await helper.updateRoleConnection(Config.client.id, {
                             metadata: {
-                                commits: String(conn.commits + counts[user])
+                                commits: String(conn.commits + counts[user]),
                             },
-                            platformName:     "Github",
-                            platformUsername: user
+                            platformName: "Github",
+                            platformUsername: user,
                         });
-                        cache.connections[user.toLowerCase()].commits += counts[user];
+                        conn.commits += counts[user];
                     } catch {
-                        delete cache.connections[user.toLowerCase()];
+                        Reflect.deleteProperty(cache.connections, user.toLowerCase());
                     }
                     modified = true;
                 }
@@ -67,34 +76,35 @@ hook.on("push", async ({ payload: data }) => {
     }
 });
 
+const githubMiddleware = createNodeMiddleware(hook, { path: "/" });
 
 const app = express()
     .use(morgan("dev"))
     .use(cookieParser(Config.cookieSecret))
-    .get("/", async(_req, res) => {
+    .get("/", wrap(async (_req, res) => {
         const state = randomBytes(32).toString("hex");
         res.cookie("oceanic-satate", state, { maxAge: 1000 * 60 * 5, signed: true });
-        return res.redirect(OAuthHelper.constructURL({
-            clientID:    Config.client.id,
-            scopes:      [OAuthScopes.IDENTIFY, OAuthScopes.ROLE_CONNECTIONS_WRITE, OAuthScopes.CONNECTIONS],
+        res.redirect(OAuthHelper.constructURL({
+            clientID: Config.client.id,
+            scopes: [OAuthScopes.IDENTIFY, OAuthScopes.ROLE_CONNECTIONS_WRITE, OAuthScopes.CONNECTIONS],
             state,
             redirectURI: Config.client.redirectURI,
-            prompt:      "none"
+            prompt: "none",
         }));
-    })
-    .get("/up", async (_req, res) => res.status(204).end())
-    .get("/callback", async(req, res) => {
-        if (!req.query.code) {
+    }))
+    .get("/up", wrap(async (_req, res) => res.status(204).end()))
+    .get("/callback", wrap(async (req, res) => {
+        if (typeof req.query.code !== "string" || !req.query.code) {
             return res.status(400).send("Invalid Code");
         }
         if ((req.signedCookies as Record<string, string>)["oceanic-satate"] !== req.query.state) {
             return res.status(400).send("Invalid state");
         }
         const token = await client.rest.oauth.exchangeCode({
-            clientID:     Config.client.id,
+            clientID: Config.client.id,
             clientSecret: Config.client.secret,
-            code:         String(req.query.code),
-            redirectURI:  Config.client.redirectURI
+            code: req.query.code,
+            redirectURI: Config.client.redirectURI,
         }).catch(() => null);
         if (token === null) {
             return res.status(400).send("Invalid Code");
@@ -115,10 +125,10 @@ const app = express()
         if (name && verified) {
             await helper.updateRoleConnection(Config.client.id, {
                 metadata: {
-                    commits: String(commitCount)
+                    commits: String(commitCount),
                 },
-                platformName:     "Github",
-                platformUsername: name
+                platformName: "Github",
+                platformUsername: name,
             });
 
             const key = await Cache.lock();
@@ -126,7 +136,7 @@ const app = express()
                 const cache = await Cache.read(key);
                 cache.connections[name.toLowerCase()] = {
                     accessToken: EncryptionHandler.encrypt(token.accessToken),
-                    commits:     commitCount
+                    commits: commitCount,
                 };
                 await Cache.write(cache, key);
             } finally {
@@ -136,7 +146,9 @@ const app = express()
         } else {
             return res.status(400).end("You have not contributed. Please make sure your github account is linked to your Discord account before attempting this.");
         }
-    })
-    .use("/github", createNodeMiddleware(hook, { path: "/" }));
+    }))
+    .use("/github", (req, res, next) => {
+        void githubMiddleware(req, res, next);
+    });
 
 app.listen(8080, "0.0.0.0");

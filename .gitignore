@@ -1,5 +1,5 @@
-node_modules/
-config.jsonc
-test.ts
-data/
-dist/
+/node_modules
+/.vscode
+/.idea
+/.env
+/dist

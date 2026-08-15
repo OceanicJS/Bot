@@ -1,23 +1,25 @@
-import Command from "../util/Command.js";
-import { filter, getSnipe } from "../util/util.js";
-import EncryptionHandler from "../util/EncryptionHandler.js";
-import { type Snipe } from "../util/Cache.js";
 import {
     ApplicationCommandOptionTypes,
     ApplicationCommandTypes,
     ChannelTypes,
     type Client,
     type CommandInteraction,
-    MessageFlags
+    MessageFlags,
 } from "oceanic.js";
+
+import { type Snipe } from "../util/Cache.js";
+import Command from "../util/Command.js";
+import EncryptionHandler from "../util/EncryptionHandler.js";
+import { filter, getSnipe } from "../util/util.js";
+
 import type { ApplicationCommandBuilder } from "@oceanicjs/builders";
 
 export default class SnipeCommand extends Command {
     override description = "Get the last deleted message in a channel.";
     override name = "snipe";
     override type = ApplicationCommandTypes.CHAT_INPUT;
-    override async run(this: Client, interaction: CommandInteraction) {
-        const channel = interaction.data.options.getChannelOption("channel")?.value || interaction.channelID;
+    override async run(this: Client, interaction: CommandInteraction): Promise<unknown> {
+        const channel = interaction.data.options.getChannelOption("channel")?.value ?? interaction.channelID;
         let snipe: Snipe | null;
         try {
             snipe = await getSnipe(channel, "delete");
@@ -25,42 +27,42 @@ export default class SnipeCommand extends Command {
             const err = e as Error;
             return interaction.reply({
                 content: `Failed to fetch snipe: **${err.name}: ${err.message}**`,
-                flags:   MessageFlags.EPHEMERAL
+                flags: MessageFlags.EPHEMERAL,
             });
         }
         if (!snipe) {
             return interaction.reply({
                 content: "No snipes found.",
-                flags:   MessageFlags.EPHEMERAL
+                flags: MessageFlags.EPHEMERAL,
             });
         }
         return interaction.reply({
             embeds: [
                 {
-                    title:  "Delete Snipe",
+                    title: "Delete Snipe",
                     author: {
-                        name:    snipe.author.tag,
-                        iconURL: snipe.author.avatarURL
+                        name: snipe.author.tag,
+                        iconURL: snipe.author.avatarURL,
                     },
-                    color:  0xC61A09,
+                    color: 0xC61A09,
                     fields: [
                         {
-                            name:  "Content",
-                            value: filter(EncryptionHandler.decrypt(snipe.content) || "[No content]").slice(0, 1024)
-                        }
+                            name: "Content",
+                            value: filter(EncryptionHandler.decrypt(snipe.content) || "[No content]").slice(0, 1024),
+                        },
                     ],
                     timestamp: new Date(snipe.timestamp).toISOString(),
-                    footer:    {
-                        text: "Deleted at"
-                    }
-                }
-            ]
+                    footer: {
+                        text: "Deleted at",
+                    },
+                },
+            ],
         });
     }
 
-    override setOptions(command: ApplicationCommandBuilder) {
+    override setOptions(command: ApplicationCommandBuilder): void {
         command
-            .addOption("channel", ApplicationCommandOptionTypes.CHANNEL, option => {
+            .addOption("channel", ApplicationCommandOptionTypes.CHANNEL, (option) => {
                 option.setDescription("The channel to snipe. Defaults to the current channel.")
                     .setChannelTypes([ChannelTypes.GUILD_TEXT, ChannelTypes.GUILD_ANNOUNCEMENT, ChannelTypes.GUILD_VOICE, ChannelTypes.ANNOUNCEMENT_THREAD, ChannelTypes.PUBLIC_THREAD, ChannelTypes.PRIVATE_THREAD])
                     .setRequired(false);

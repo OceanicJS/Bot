@@ -1,17 +1,22 @@
-import Cache from "./Cache.js";
-import GenerationQueue from "./GenerationQueue.js";
-import GenerationLogs from "./GenerationLogs.js";
-import run from "../docs/run.js";
-import type { Root } from "../docs/types.js";
-import type { AutocompleteChoice, Client, ExecuteWebhookOptions, User } from "oceanic.js";
-import { ReflectionKind, type JSONOutput } from "typedoc";
-import { gte } from "semver";
-import { parse } from "jsonc-parser";
-import { Octokit } from "@octokit/rest";
-import type { PathLike } from "node:fs";
-import { access, readFile } from "node:fs/promises";
 import { execSync } from "node:child_process";
+import { access, readFile } from "node:fs/promises";
 import { format } from "node:util";
+
+import { Octokit } from "@octokit/rest";
+import { parse } from "jsonc-parser";
+import { gte } from "semver";
+import { ReflectionKind, type JSONOutput } from "typedoc";
+
+import run from "../docs/run.js";
+
+import Cache from "./Cache.js";
+import GenerationLogs from "./GenerationLogs.js";
+import GenerationQueue from "./GenerationQueue.js";
+
+import type { Snipe } from "./Cache.js";
+import type { Class, Enum, Interface, Root, TypeAlias } from "../docs/types.js";
+import type { PathLike } from "node:fs";
+import type { AutocompleteChoice, Client, ExecuteWebhookOptions, Message, User } from "oceanic.js";
 
 interface IConfigWebhook {
     id: string;
@@ -40,9 +45,9 @@ export interface IConfig {
 export const isDocker = await access("/.dockerenv").then(() => true, () => false) || await readFile("/proc/1/cgroup", "utf8").then(contents => contents.includes("docker"));
 export const Config = parse(await readFile(new URL("../../config.jsonc", import.meta.url), "utf8")) as IConfig;
 
-export const filter = (str: string) => str.replaceAll("[", "\\[").replaceAll("]", "\\]");
-export const exists = (path: PathLike) => access(path).then(() => true, () => false);
-export const truncateWords = (str: string, maxLen: number) => {
+export const filter = (str: string): string => str.replaceAll("[", "\\[").replaceAll("]", "\\]");
+export const exists = (path: PathLike): Promise<boolean> => access(path).then(() => true, () => false);
+export const truncateWords = (str: string, maxLen: number): string => {
     if (str.length <= maxLen) {
         return str;
     }
@@ -55,22 +60,20 @@ export const truncateWords = (str: string, maxLen: number) => {
     }
     return `${result}...`;
 };
-export const truncate = (str: string, maxLen: number) => {
+export const truncate = (str: string, maxLen: number): string => {
     if (str.length <= maxLen) {
         return str;
     }
     return `${str.slice(0, maxLen - 3)}...`;
 };
 
-
 export let defaultVersion: string;
 export let versions: Array<string>;
 const minSupport = "1.3.0";
 const minNewLayout = "1.8.0";
-export function refreshVersions() {
+export function refreshVersions(): void {
     defaultVersion = execSync("npm show oceanic.js version").toString().slice(0, -1);
     versions = (JSON.parse(execSync("npm show oceanic.js versions --json").toString()) as Array<string>).filter(v => !v.includes("-") && gte(v, minSupport));
-
 }
 setInterval(refreshVersions.bind(null), 6e5);
 refreshVersions();
@@ -98,7 +101,7 @@ export async function getVersion(version: string): Promise<Root | null> {
     return JSON.parse(await readFile(`${Config.dataDir}/docs/${version}.json`, "utf8")) as Root;
 }
 
-export function docsURL(version: string, type: "class" | "interface" | "enum" | "typeAlias", module: string, name: string, otherName?: string) {
+export function docsURL(version: string, type: "class" | "interface" | "enum" | "typeAlias", module: string, name: string, otherName?: string): string {
     let typeName: string, includeModule = true;
     if (gte(version, minNewLayout)) {
         includeModule = module !== name;
@@ -125,13 +128,13 @@ export function docsURL(version: string, type: "class" | "interface" | "enum" | 
         }
 
         default: {
-            return `https://docs.oceanic.ws/v${version}#type=${type as string}&module=${module}&name=${name}&otherName=${otherName || "undefined"}`;
+            return `https://docs.oceanic.ws/v${version}#type=${type as string}&module=${module}&name=${name}&otherName=${otherName ?? "undefined"}`;
         }
     }
     return `https://docs.oceanic.ws/v${version}/${typeName}/${includeModule ? `${module.replaceAll("/", "_")}.` : ""}${name.replaceAll("/", "_")}.html${otherName ? `#${otherName}` : ""}`;
 }
 
-export async function find(version: string, name: string) {
+export async function find(version: string, name: string): Promise<{ type: "class"; value: Class } | { type: "enum"; value: Enum } | { type: "interface"; value: Interface } | { type: "typeAlias"; value: TypeAlias } | null> {
     const root = await getVersion(version);
     const clazz = root?.classes.find(c => c.name === name);
     const enm = root?.enums.find(c => c.name === name);
@@ -140,29 +143,29 @@ export async function find(version: string, name: string) {
 
     if (clazz) {
         return {
-            type:  "class" as const,
-            value: clazz
+            type: "class" as const,
+            value: clazz,
         };
     }
 
     if (enm) {
         return {
-            type:  "enum" as const,
-            value: enm
+            type: "enum" as const,
+            value: enm,
         };
     }
 
     if (iface) {
         return {
-            type:  "interface" as const,
-            value: iface
+            type: "interface" as const,
+            value: iface,
         };
     }
 
     if (typeAlias) {
         return {
-            type:  "typeAlias" as const,
-            value: typeAlias
+            type: "typeAlias" as const,
+            value: typeAlias,
         };
     }
 
@@ -170,29 +173,29 @@ export async function find(version: string, name: string) {
 }
 
 const intrinsic = {
-    string:    "[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)",
-    number:    "[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)",
-    boolean:   "[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)",
-    any:       "[any](https://www.typescriptlang.org/docs/handbook/2/functions.html#any)",
-    void:      "[void](https://www.typescriptlang.org/docs/handbook/2/functions.html#void)",
+    string: "[String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String)",
+    number: "[Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)",
+    boolean: "[Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean)",
+    any: "[any](https://www.typescriptlang.org/docs/handbook/2/functions.html#any)",
+    void: "[void](https://www.typescriptlang.org/docs/handbook/2/functions.html#void)",
     undefined: "[undefined](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined)",
-    null:      "[null](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null)",
-    never:     "[never](https://www.typescriptlang.org/docs/handbook/2/functions.html#never)",
-    unknown:   "[unknown](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown)",
-    object:    "[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)",
-    symbol:    "[Symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol)",
-    Buffer:    "[Buffer](https://nodejs.org/api/buffer.html)",
-    BigInt:    "[BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)",
-    Date:      "[Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)",
-    Promise:   "[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)",
-    Error:     "[Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)",
-    Array:     "[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)",
-    Map:       "[Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)",
-    Set:       "[Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)",
-    Function:  "[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)"
+    null: "[null](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null)",
+    never: "[never](https://www.typescriptlang.org/docs/handbook/2/functions.html#never)",
+    unknown: "[unknown](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown)",
+    object: "[Object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)",
+    symbol: "[Symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol)",
+    Buffer: "[Buffer](https://nodejs.org/api/buffer.html)",
+    BigInt: "[BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)",
+    Date: "[Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)",
+    Promise: "[Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)",
+    Error: "[Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)",
+    Array: "[Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)",
+    Map: "[Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map)",
+    Set: "[Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)",
+    Function: "[Function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)",
 
 };
-export async function linkType(version: string, text: string) {
+export async function linkType(version: string, text: string): Promise<string> {
     const root = await getVersion(version);
     if (root === null) {
         return text;
@@ -239,23 +242,21 @@ export async function linkType(version: string, text: string) {
     return text.replaceAll(/(<|>)/g, "\\$1");
 }
 
-
-export function truncateChoices(values: Array<AutocompleteChoice>) {
+export function truncateChoices(values: Array<AutocompleteChoice>): Array<AutocompleteChoice> {
     return values.length < 25 ? values : [
         ...values.slice(0, 25 - 1),
         {
-            name:  `(And ${values.length - 24} More)`,
-            value: "more_count"
-        }
+            name: `(And ${values.length - 24} More)`,
+            value: "more_count",
+        },
     ];
 }
 
-
-export async function getSnipe(channel: string, type: "delete" | "edit") {
+export async function getSnipe(channel: string, type: "delete" | "edit"): Promise<Snipe | null> {
     const key = await Cache.lock();
     try {
         const cache = await Cache.read(key);
-        const snipe = cache.snipes.sort((a,b) => b.timestamp - a.timestamp).find(sn => sn.channel === channel && sn.type === type);
+        const snipe = cache.snipes.sort((a, b) => b.timestamp - a.timestamp).find(sn => sn.channel === channel && sn.type === type);
         if (!snipe) {
             return null;
         }
@@ -268,7 +269,7 @@ export async function getSnipe(channel: string, type: "delete" | "edit") {
     }
 }
 
-export async function saveSnipe(author: User, channel: string, content: string, oldContent: string | null, type: "delete" | "edit") {
+export async function saveSnipe(author: User, channel: string, content: string, oldContent: string | null, type: "delete" | "edit"): Promise<Snipe> {
     const key = await Cache.lock();
     try {
         const cache = await Cache.read(key);
@@ -282,53 +283,53 @@ export async function saveSnipe(author: User, channel: string, content: string, 
 }
 
 export const octo = new Octokit({
-    auth: Config.git
+    auth: Config.git,
 });
 
 export async function getCommitCount(author: string, page = 1): Promise<number> {
     const { data } = await octo.repos.listCommits({
-        owner:    "OceanicJS",
-        repo:     "Oceanic",
+        owner: "OceanicJS",
+        repo: "Oceanic",
         author,
         per_page: 100,
-        page
+        page,
     });
 
     return data.length === 100 ? 100 + await getCommitCount(author, page + 1) : data.length;
 }
 
 let client: Client;
-export function setClient(c: Client) {
+export function setClient(c: Client): void {
     client = c;
 }
 
-export function getClient() {
+export function getClient(): Client {
     return client;
 }
 
-export function formatReflection(ref: JSONOutput.DeclarationReflection | ReflectionKind) {
+export function formatReflection(ref: JSONOutput.DeclarationReflection | ReflectionKind): string {
     if (typeof ref === "number") {
         return `${ReflectionKind[ref]} (${ref})`;
     }
     return `${ReflectionKind[ref.kind]} (${ref.kind}) for ${ref.name} (${ref.id})`;
 }
 
-export function discordLog(options: Omit<ExecuteWebhookOptions, "wait">) {
+export function discordLog(options: Omit<ExecuteWebhookOptions, "wait">): Promise<Message> {
     return getClient().rest.webhooks.execute(Config.logWebhook.id, Config.logWebhook.token, { ...options, wait: true });
 }
 
-export async function generate(version: string) {
+export async function generate(version: string): Promise<void> {
     if (!GenerationQueue.has(version)) {
-        return new Promise<void>(resolve => {
-            GenerationQueue.add(version, async() => {
+        return new Promise<void>((resolve) => {
+            GenerationQueue.add(version, async () => {
                 await getVersion(version)
                     .then(
                         () => GenerationLogs.save(version),
-                        (err: Error) => discordLog({
-                            content: `Generation for **${version}** failed.\n\n\`\`\`\n${format(err)}\`\`\``
-                        })
+                        (err: unknown) => discordLog({
+                            content: `Generation for **${version}** failed.\n\n\`\`\`\n${format(err)}\`\`\``,
+                        }),
                     )
-                    .then(() => resolve());
+                    .then(() => { resolve(); });
             });
         });
     }

@@ -1,16 +1,17 @@
-import { defaultVersion } from "../util/util.js";
-import { handleAutocomplete } from "../util/docs.js";
-import Commands from "../util/Commands.js";
+import Logger from "@uwu-codes/logger";
 import {
     type AnyInteractionGateway,
     type Client,
     InteractionTypes,
     type CommandInteraction,
-    type AutocompleteInteraction
+    type AutocompleteInteraction,
 } from "oceanic.js";
-import Logger from "@uwu-codes/logger";
 
-function stringifyArguments(interaction: CommandInteraction | AutocompleteInteraction) {
+import Commands from "../util/Commands.js";
+import { handleAutocomplete } from "../util/docs.js";
+import { defaultVersion } from "../util/util.js";
+
+function stringifyArguments(interaction: CommandInteraction | AutocompleteInteraction): string | null {
     if (interaction.data.options.raw.length === 0) {
         return null;
     }
@@ -39,7 +40,7 @@ function stringifyArguments(interaction: CommandInteraction | AutocompleteIntera
     }
 }
 
-export default async function interactionCreateEvent(this: Client, interaction: AnyInteractionGateway) {
+export default async function interactionCreateEvent(this: Client, interaction: AnyInteractionGateway): Promise<unknown> {
     if (interaction.type === InteractionTypes.APPLICATION_COMMAND) {
         await interaction.defer();
         Logger.getLogger(`command/${interaction.data.name}`).info(`${interaction.user.tag} (user: ${interaction.user.id}, args: ${stringifyArguments(interaction) ?? "none"})`);

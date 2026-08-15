@@ -1,9 +1,11 @@
-import { getMap, setName } from "./idToName.js";
-import GenerationLogs from "../util/GenerationLogs.js";
-import { formatReflection } from "../util/util.js";
 import { type JSONOutput, ReflectionKind } from "typedoc";
 
-export default function saveNames(project: JSONOutput.ProjectReflection) {
+import GenerationLogs from "../util/GenerationLogs.js";
+import { formatReflection } from "../util/util.js";
+
+import { getMap, setName } from "./idToName.js";
+
+export default function saveNames(project: JSONOutput.ProjectReflection): void {
     if (project.children) {
         for (const child of project.children) {
             if (![ReflectionKind.Module, ReflectionKind.Class, ReflectionKind.Interface].includes(child.kind)) {

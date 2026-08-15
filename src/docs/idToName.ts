@@ -1,10 +1,10 @@
 const nameMap = new Map<number, string>();
 
-export function getMap() {
+export function getMap(): Map<number, string> {
     return nameMap;
 }
 
-export function getName(id: number) {
+export function getName(id: number): string {
     if (!nameMap.has(id)) {
         console.log(`Missing name for ${id}`);
         console.debug(new TypeError(`Missing name for ${id}`).stack);
@@ -12,10 +12,10 @@ export function getName(id: number) {
     return nameMap.get(id) ?? `default[${id}]`;
 }
 
-export function setName(id: number, name: string) {
+export function setName(id: number, name: string): void {
     nameMap.set(id, name);
 }
 
-export function resetNames() {
+export function resetNames(): void {
     nameMap.clear();
 }
